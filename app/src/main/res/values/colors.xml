@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3498db</color>
+    <color name="colorPrimaryDark">#3498db</color>
+    <color name="colorAccent">#3498db</color>
+    <color name="colorWhite">#fff</color>
+    <color name="aftha7Blue">#154BAD</color>
+    <color name="aftha7LightBlue">#2095F2</color>
+    <color name="aftha7Yellow">#FFA200</color>
+    <color name="facebook">#3A5897</color>
+    <color name="twitter">#54ACED</color>
+    <color name="colorRipple">#fff</color>
+</resources>

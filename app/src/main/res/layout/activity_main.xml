@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.cheersapps.aftha7beta.MainActivity"
+    android:background="@drawable/bg"
+    android:weightSum="1">
+
+
+    <EditText
+        android:id="@+id/et_password"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:hint="            Password"
+        android:textSize="16sp"
+        android:drawableLeft="@mipmap/locked"
+        android:fontFamily="Roboto"
+        android:inputType="textPassword"
+        android:layout_marginBottom="15dp"
+        android:textColor="@color/colorWhite"
+        android:textColorHint="@color/colorWhite"
+        android:layout_marginTop="20dp"
+        android:layout_centerInParent="true"/>
+
+    <Button
+        android:id="@+id/btn_signin"
+        android:layout_width="250dp"
+        android:layout_marginTop="38dp"
+        android:layout_height="35dp"
+        android:textColor="#fff"
+        android:text="Sign In"
+        android:layout_below="@+id/et_password"
+        android:layout_alignLeft="@+id/btn_signup"
+        android:layout_alignStart="@+id/btn_signup" />
+
+    <Button
+        android:id="@+id/btn_signup"
+        android:layout_width="250dp"
+        android:layout_marginTop="420dp"
+        android:layout_height="35dp"
+        android:layout_centerHorizontal="true"
+        android:textColor="#fff"
+        android:text="Sign Up"
+
+        />
+
+    <EditText
+        android:id="@+id/et_signin"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:hint="          Username"
+        android:letterSpacing="0.1"
+        android:fontFamily="Roboto"
+        android:inputType="textEmailAddress"
+        android:drawablePadding="10dp"
+        android:textColor="@color/colorWhite"
+        android:textColorHint="@color/colorWhite"
+        android:textSize="16sp"
+
+        android:drawableLeft="@mipmap/mm"
+        android:layout_above="@+id/et_password"
+        android:layout_alignLeft="@+id/et_password"
+        android:layout_alignStart="@+id/et_password" />
+</RelativeLayout>
