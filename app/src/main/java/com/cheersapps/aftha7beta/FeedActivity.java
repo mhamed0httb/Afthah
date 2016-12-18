@@ -29,6 +29,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
@@ -273,8 +274,9 @@ public class FeedActivity extends AppCompatActivity
         View mView;
         ImageButton btnLike;
         ImageButton btnComment;
+        ImageButton btnPlusImgs;
         ImageView postImage;
-        ImageButton postAlbumPlus;
+        //ImageButton postAlbumPlus;
         RippleView postImageRipple;
         public PoViewHolder(View itemView) {
             super(itemView);
@@ -282,8 +284,9 @@ public class FeedActivity extends AppCompatActivity
             btnLike = (ImageButton)itemView.findViewById(R.id.btn_like_post);
             btnComment = (ImageButton)itemView.findViewById(R.id.btn_comment_post);
             postImage = (ImageView)mView.findViewById(R.id.post_media);
-            postAlbumPlus = (ImageButton)mView.findViewById(R.id.post_album_plus);
+            //postAlbumPlus = (ImageButton)mView.findViewById(R.id.post_album_plus);
             postImageRipple = (RippleView)mView.findViewById(R.id.post_media_ripple);
+            btnPlusImgs = (ImageButton)mView.findViewById(R.id.btn_plus_img_post);
         }
         public void setDescription(String desc){
             TextView post_desc = (TextView) mView.findViewById(R.id.post_description);
@@ -295,6 +298,12 @@ public class FeedActivity extends AppCompatActivity
             VideoView postVideo = (VideoView)mView.findViewById(R.id.post_video);
             final ImageView postAlbum = (ImageView)mView.findViewById(R.id.post_album);
             if(mediaType.equals("NOFILE")){
+                //SET WEIGHT
+                btnPlusImgs.setVisibility(View.GONE);
+                btnComment.setLayoutParams(new TableLayout.LayoutParams(DrawerLayout.LayoutParams.MATCH_PARENT, DrawerLayout.LayoutParams.WRAP_CONTENT, 3f));
+                btnLike.setLayoutParams(new TableLayout.LayoutParams(DrawerLayout.LayoutParams.MATCH_PARENT, DrawerLayout.LayoutParams.WRAP_CONTENT, 3f));
+                btnPlusImgs.setLayoutParams(new TableLayout.LayoutParams(DrawerLayout.LayoutParams.MATCH_PARENT, DrawerLayout.LayoutParams.WRAP_CONTENT, 0f));
+                //END SET WEIGHT
                 //Picasso.with(context).load("https://firebasestorage.googleapis.com/v0/b/aftha7-2a05e.appspot.com/o/white.png?alt=media&token=7c98551c-e474-430c-956e-0f78715ea30f").resize(1, 1)
                         //.centerCrop().into(postImage);
                 postImage.setVisibility(View.GONE);
@@ -302,12 +311,24 @@ public class FeedActivity extends AppCompatActivity
                 videoHolder.setVisibility(View.GONE);
                 albumHolder.setVisibility(View.GONE);
             }else if(mediaType.equals("IMAGE")){
+                //SET WEIGHT
+                btnPlusImgs.setVisibility(View.GONE);
+                btnComment.setLayoutParams(new TableLayout.LayoutParams(DrawerLayout.LayoutParams.MATCH_PARENT, DrawerLayout.LayoutParams.WRAP_CONTENT, 3f));
+                btnLike.setLayoutParams(new TableLayout.LayoutParams(DrawerLayout.LayoutParams.MATCH_PARENT, DrawerLayout.LayoutParams.WRAP_CONTENT, 3f));
+                btnPlusImgs.setLayoutParams(new TableLayout.LayoutParams(DrawerLayout.LayoutParams.MATCH_PARENT, DrawerLayout.LayoutParams.WRAP_CONTENT, 0f));
+                //END SET WEIGHT
                 postImage.setVisibility(View.VISIBLE);
                 postImageRipple.setVisibility(View.VISIBLE);
                 Picasso.with(context).load(image).placeholder(R.drawable.please_wait).centerCrop().fit().into(postImage);
                 videoHolder.setVisibility(View.GONE);
                 albumHolder.setVisibility(View.GONE);
             }else if(mediaType.equals("VIDEO")){
+                //SET WEIGHT
+                btnPlusImgs.setVisibility(View.GONE);
+                btnComment.setLayoutParams(new TableLayout.LayoutParams(DrawerLayout.LayoutParams.MATCH_PARENT, DrawerLayout.LayoutParams.WRAP_CONTENT, 3f));
+                btnLike.setLayoutParams(new TableLayout.LayoutParams(DrawerLayout.LayoutParams.MATCH_PARENT, DrawerLayout.LayoutParams.WRAP_CONTENT, 3f));
+                btnPlusImgs.setLayoutParams(new TableLayout.LayoutParams(DrawerLayout.LayoutParams.MATCH_PARENT, DrawerLayout.LayoutParams.WRAP_CONTENT, 0f));
+                //END SET WEIGHT
                 postImage.setVisibility(View.VISIBLE);
                 postImageRipple.setVisibility(View.VISIBLE);
                 videoHolder.setVisibility(View.GONE);
@@ -318,6 +339,12 @@ public class FeedActivity extends AppCompatActivity
                 postVideo.start();*/
                 Picasso.with(context).load(R.drawable.video_player_512x512).centerCrop().fit().into(postImage);
             }else if(mediaType.equals("ALBUM")){
+                //SET WEIGHT
+                btnPlusImgs.setVisibility(View.VISIBLE);
+                btnComment.setLayoutParams(new TableLayout.LayoutParams(DrawerLayout.LayoutParams.MATCH_PARENT, DrawerLayout.LayoutParams.WRAP_CONTENT, 2f));
+                btnLike.setLayoutParams(new TableLayout.LayoutParams(DrawerLayout.LayoutParams.MATCH_PARENT, DrawerLayout.LayoutParams.WRAP_CONTENT, 2f));
+                btnPlusImgs.setLayoutParams(new TableLayout.LayoutParams(DrawerLayout.LayoutParams.MATCH_PARENT, DrawerLayout.LayoutParams.WRAP_CONTENT, 2f));
+                //END SET WEIGHT
                 postImage.setVisibility(View.GONE);
                 postImageRipple.setVisibility(View.GONE);
                 videoHolder.setVisibility(View.GONE);
@@ -487,7 +514,7 @@ public class FeedActivity extends AppCompatActivity
                         }
                     }
                 });
-                viewHolder.postAlbumPlus.setOnClickListener(new View.OnClickListener() {
+                viewHolder.btnPlusImgs.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         loadDialogViewPostAlbum(p);

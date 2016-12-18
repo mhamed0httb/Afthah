@@ -124,8 +124,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:layout_weight="1"/>
-            <ImageButton
+                android:layout_weight="4"/>
+            <!--ImageButton
                 android:id="@+id/post_album_plus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -133,7 +133,7 @@
                 android:src="@drawable/view_64x64"
                 android:layout_weight="3"
                 android:layout_gravity="center"
-                android:background="@android:color/transparent"/>
+                android:background="@android:color/transparent"/-->
         </LinearLayout>
 
         <LinearLayout
@@ -177,7 +177,7 @@
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:weightSum="2">
+            android:weightSum="6">
 
             <ImageButton
                 android:layout_width="wrap_content"
@@ -185,7 +185,7 @@
                 android:text="Comment"
                 android:src="@drawable/comment_24x24"
                 android:id="@+id/btn_comment_post"
-                android:layout_weight="1"
+                android:layout_weight="2"
                 style="@style/Widget.AppCompat.Button.Borderless"
                 android:fontFamily="sans-serif-condensed"/>
 
@@ -204,7 +204,16 @@
                 android:text="12 Likes"
                 android:src="@drawable/like_empty_24x24"
                 android:id="@+id/btn_like_post"
-                android:layout_weight="1"
+                android:layout_weight="2"
+                style="@style/Widget.AppCompat.Button.Borderless"/>
+
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="12 Likes"
+                android:src="@drawable/plus_24x24"
+                android:id="@+id/btn_plus_img_post"
+                android:layout_weight="2"
                 style="@style/Widget.AppCompat.Button.Borderless"/>
         </LinearLayout>
     </LinearLayout>
