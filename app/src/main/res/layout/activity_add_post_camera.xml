@@ -7,13 +7,32 @@
     tools:context="com.cheersapps.aftha7beta.AddPostCameraActivity"
     android:gravity="center|top">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:id="@+id/back_holder_camera"
+        android:padding="16dp">
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_back_from_add_post_camera"
+            android:src="@drawable/close_24x24"
+            android:layout_gravity="left"
+            android:background="@android:color/transparent"/>
+
+    </LinearLayout>
+
     <EditText
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:inputType="textMultiLine"
         android:ems="10"
+        android:hint="Your post here..."
+        android:gravity="top"
         android:id="@+id/add_post_input_text_camera"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/back_holder_camera"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -32,9 +51,9 @@
             android:layout_alignParentEnd="true"
             style="@style/Widget.AppCompat.Button.Colored"
             android:backgroundTint="@color/colorPrimaryDark"
-            android:layout_weight="1"/>
+            android:layout_weight="2"/>
 
-        <Button
+        <!--Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Add"
@@ -43,7 +62,7 @@
             android:layout_alignParentEnd="true"
             style="@style/Widget.AppCompat.Button.Colored"
             android:backgroundTint="@color/colorPrimaryDark"
-            android:layout_weight="1"/>
+            android:layout_weight="1"/-->
 
     </LinearLayout>
 
@@ -54,5 +73,43 @@
         android:layout_below="@+id/linear_buttons_cam"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="30dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="4"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true">
+
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_allow_my_location_camera"
+            android:src="@mipmap/ic_location_off_black_36dp"
+            android:background="@android:color/transparent"
+            android:padding="10dp"
+            android:layout_weight="1"/>
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_add_post_camera_location"
+            android:src="@mipmap/ic_map_black_36dp"
+            android:background="@android:color/transparent"
+            android:padding="10dp"
+            android:layout_weight="1"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:id="@+id/btn_add_post_camera"
+            android:text="Aftha7"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_weight="2"/>
+
+    </LinearLayout>
 
 </RelativeLayout>

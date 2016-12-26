@@ -11,13 +11,32 @@
     tools:context="com.cheersapps.aftha7beta.AddPostVideoActivity"
     android:gravity="center|top">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:id="@+id/back_holder_video"
+        android:padding="16dp">
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_back_from_add_post_video"
+            android:src="@drawable/close_24x24"
+            android:layout_gravity="left"
+            android:background="@android:color/transparent"/>
+
+    </LinearLayout>
+
     <EditText
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:inputType="textMultiLine"
         android:ems="10"
+        android:hint="Your post here..."
+        android:gravity="top"
         android:id="@+id/add_post_input_text_video"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/back_holder_video"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -36,9 +55,9 @@
             android:layout_alignParentEnd="true"
             style="@style/Widget.AppCompat.Button.Colored"
             android:backgroundTint="@color/colorPrimaryDark"
-            android:layout_weight="1"/>
+            android:layout_weight="2"/>
 
-        <Button
+        <!--Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Add"
@@ -47,21 +66,21 @@
             android:layout_alignParentEnd="true"
             style="@style/Widget.AppCompat.Button.Colored"
             android:backgroundTint="@color/colorPrimaryDark"
-            android:layout_weight="1"/>
+            android:layout_weight="1"/-->
 
     </LinearLayout>
 
     <VideoView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="200dp"
         android:id="@+id/display_video_take_post_video"
         android:layout_below="@+id/linear_buttons_vid"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
         android:id="@+id/linear_layout_video"
+        android:layout_below="@+id/display_video_take_post_video"
         android:weightSum="3">
         <ImageButton
             android:id="@+id/btn_play_video"
@@ -86,6 +105,44 @@
             android:layout_height="wrap_content"
             android:src="@drawable/stop_24x24"
             style="@style/Widget.AppCompat.Button.Borderless"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="4"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true">
+
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_allow_my_location_video"
+            android:src="@mipmap/ic_location_off_black_36dp"
+            android:background="@android:color/transparent"
+            android:padding="10dp"
+            android:layout_weight="1"/>
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_add_post_video_location"
+            android:src="@mipmap/ic_map_black_36dp"
+            android:background="@android:color/transparent"
+            android:padding="10dp"
+            android:layout_weight="1"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:id="@+id/btn_add_post_video"
+            android:text="Aftha7"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_weight="2"/>
+
     </LinearLayout>
 
 

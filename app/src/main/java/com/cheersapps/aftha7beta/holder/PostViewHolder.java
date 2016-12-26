@@ -67,7 +67,7 @@ public class PostViewHolder extends RecyclerView.ViewHolder {
         btnLike = (ImageButton)itemView.findViewById(R.id.btn_like_post);
         postMedia = (ImageView)itemView.findViewById(R.id.post_media);
         postTime = (TextView)itemView.findViewById(R.id.post_time);
-        btnViwMap = (ImageButton)itemView.findViewById(R.id.btn_view_post_map);
+        //btnViwMap = (ImageButton)itemView.findViewById(R.id.btn_view_post_map);
         postVideo = (VideoView)itemView.findViewById(R.id.post_video);
         btnStartVideo = (ImageButton)itemView.findViewById(R.id.btn_start_post_video);
         btnStopVideo = (ImageButton)itemView.findViewById(R.id.btn_stop_post_video);

@@ -10,4 +10,14 @@
     <string name="section_format">Hello World from section: %1$d</string>
 
     <string name="facebook_app_id">615575121947766</string>
+
+    <string-array name="post_options">
+        <item>View Location</item>
+    </string-array>
+
+    <string-array name="post_options_owner">
+        <item>View Location</item>
+        <item>Delete post</item>
+    </string-array>
+    <string name="title_activity_add_post_location">Map</string>
 </resources>

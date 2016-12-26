@@ -11,17 +11,6 @@
     tools:context="com.cheersapps.aftha7beta.AddPostAlbumActivity"
     android:gravity="center|top">
 
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="textMultiLine"
-        android:ems="10"
-        android:hint="Your post here..."
-        android:layout_alignParentTop="true"
-        android:id="@+id/add_post_input_text_album"
-        android:layout_centerHorizontal="true"
-        style="@style/FullWidthEditText"/>
-
     <GridView
         android:id="@+id/grid_view_images_album"
         android:layout_width="match_parent"
@@ -38,22 +27,52 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:id="@+id/linearLayout">
+        android:id="@+id/linearLayout"
+        android:weightSum="4">
+        <ImageButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_allow_my_location_album"
+            android:src="@mipmap/ic_location_off_black_36dp"
+            android:background="@android:color/transparent"
+            android:padding="10dp"
+            android:layout_weight="1"/>
+
+        <ImageButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_add_post_album_location"
+            android:src="@mipmap/ic_map_black_36dp"
+            android:background="@android:color/transparent"
+            android:padding="10dp"
+            android:layout_weight="1"/>
         <Button
             android:id="@+id/btnAddPhots"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="Add Phots"/>
+            android:text="Add Photos"/>
 
         <Button
             android:id="@+id/btnSaveImages"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="Save"
+            android:text="Aftha7"
             style="@style/Widget.AppCompat.Button.Colored"
             android:backgroundTint="@color/colorPrimaryDark"/>
     </LinearLayout>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textMultiLine"
+        android:ems="10"
+        android:hint="Your post here..."
+        android:id="@+id/add_post_input_text_album"
+        style="@style/FullWidthEditText"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
 </RelativeLayout>

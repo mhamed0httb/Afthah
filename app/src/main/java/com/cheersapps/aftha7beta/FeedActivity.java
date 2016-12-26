@@ -3,13 +3,12 @@ package com.cheersapps.aftha7beta;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -22,6 +21,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
@@ -45,10 +45,19 @@ import com.cheersapps.aftha7beta.entity.User;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.MapsInitializer;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.oguzdev.circularfloatingactionmenu.library.FloatingActionMenu;
 import com.oguzdev.circularfloatingactionmenu.library.SubActionButton;
 import com.squareup.picasso.Picasso;
@@ -57,7 +66,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FeedActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -80,6 +91,7 @@ public class FeedActivity extends AppCompatActivity
     ProgressDialog progressDialogLoadData;
 
     private RecyclerView recyclerView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -270,6 +282,8 @@ public class FeedActivity extends AppCompatActivity
 
     }
 
+
+
     public static class PoViewHolder extends RecyclerView.ViewHolder {
         View mView;
         ImageButton btnLike;
@@ -278,6 +292,7 @@ public class FeedActivity extends AppCompatActivity
         ImageView postImage;
         //ImageButton postAlbumPlus;
         RippleView postImageRipple;
+        ImageButton postViewOptions;
         public PoViewHolder(View itemView) {
             super(itemView);
             mView = itemView;
@@ -287,6 +302,7 @@ public class FeedActivity extends AppCompatActivity
             //postAlbumPlus = (ImageButton)mView.findViewById(R.id.post_album_plus);
             postImageRipple = (RippleView)mView.findViewById(R.id.post_media_ripple);
             btnPlusImgs = (ImageButton)mView.findViewById(R.id.btn_plus_img_post);
+            postViewOptions = (ImageButton)mView.findViewById(R.id.btn_view_post_options);
         }
         public void setDescription(String desc){
             TextView post_desc = (TextView) mView.findViewById(R.id.post_description);
@@ -337,7 +353,7 @@ public class FeedActivity extends AppCompatActivity
                 Uri uriVideo = Uri.parse(pathVideo);
                 postVideo.setVideoURI(uriVideo);
                 postVideo.start();*/
-                Picasso.with(context).load(R.drawable.video_player_512x512).centerCrop().fit().into(postImage);
+                Picasso.with(context).load(R.drawable.video_player_256x256).centerCrop().fit().into(postImage);
             }else if(mediaType.equals("ALBUM")){
                 //SET WEIGHT
                 btnPlusImgs.setVisibility(View.VISIBLE);
@@ -467,7 +483,7 @@ public class FeedActivity extends AppCompatActivity
                 Post.class,
                 R.layout.one_post,
                 PoViewHolder.class,
-                mDatabase
+                mDatabase.orderByChild("date")
 
         ) {
             @Override
@@ -518,6 +534,12 @@ public class FeedActivity extends AppCompatActivity
                     @Override
                     public void onClick(View v) {
                         loadDialogViewPostAlbum(p);
+                    }
+                });
+                viewHolder.postViewOptions.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        loadPostOptions(p);
                     }
                 });
 
@@ -934,4 +956,115 @@ public class FeedActivity extends AppCompatActivity
 
         dialog.show();
     }
+
+    void loadPostOptions(final Post p){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        if(p.getOwner().equals(mAuth.getCurrentUser().getUid())){
+            builder.setItems(R.array.post_options_owner, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            // The 'which' argument contains the index position
+                            // of the selected item
+                            switch (which){
+                                case 0:
+                                    loadDialogViewPostMap(p);
+                                    break;
+                                case 1:
+                                    deletePostDialog(p);
+                                    break;
+                            }
+                        }
+                    });
+        }else{
+            builder.setItems(R.array.post_options, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            // The 'which' argument contains the index position
+                            // of the selected item
+                            switch (which){
+                                case 0:
+                                    loadDialogViewPostMap(p);
+                                    break;
+                            }
+                        }
+                    });
+        }
+        builder.create().show();
+    }
+
+    void deletePostDialog(final Post p){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setMessage("Are you sure you want to delete this post ?")
+                .setTitle("Delete");
+        builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked OK button
+                if(p.getMediaType().equals("NOFILE")){
+                    FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
+                    Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                }else if(p.getMediaType().equals("IMAGE")){
+                    /*DatabaseReference dR = FirebaseDatabase.getInstance().getReference().child("postImages");
+                    dR.orderByValue().equalTo(p.getId()).addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            Log.e("POSTIDD//",p.getId());
+                            Log.e("IMGIDD//", dataSnapshot.getKey());
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });*/
+                }else{
+                    FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
+                    Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                }
+
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User cancelled the dialog
+                dialog.dismiss();
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.show();
+    }
+
+    void loadDialogViewPostMap(final Post p){
+        if(p.getLatLocation() == 0 && p.getLongLocation() == 0){
+            Toast.makeText(context, "Location not specified", Toast.LENGTH_SHORT).show();
+        }else{
+            Dialog dialog = new Dialog(context,android.R.style.Theme_Material_Light_NoActionBar_Fullscreen);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            dialog.setContentView(R.layout.dialog_view_post_map);
+            dialog.show();
+
+            // set the custom dialog components - text, image and button
+            GoogleMap gMap;
+
+
+            MapView mMapView = (MapView) dialog.findViewById(R.id.map_feed);
+            MapsInitializer.initialize(context);
+
+            mMapView = (MapView) dialog.findViewById(R.id.map_feed);
+            mMapView.onCreate(dialog.onSaveInstanceState());
+            mMapView.onResume();// needed to get the map to display immediately
+            mMapView.getMapAsync(new OnMapReadyCallback() {
+                @Override
+                public void onMapReady(GoogleMap googleMap) {
+                    LatLng location = new LatLng(p.getLatLocation(),p.getLongLocation());
+                    googleMap.addMarker(new MarkerOptions().position(location).title(p.getDescription()));
+                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location,18.0f));
+                }
+            });
+        }
+
+    }
+
+
 }

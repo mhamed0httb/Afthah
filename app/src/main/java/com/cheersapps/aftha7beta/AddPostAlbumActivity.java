@@ -1,9 +1,17 @@
 package com.cheersapps.aftha7beta;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -12,6 +20,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -22,6 +31,10 @@ import com.darsh.multipleimageselect.activities.AlbumSelectActivity;
 import com.darsh.multipleimageselect.helpers.Constants;
 import com.darsh.multipleimageselect.models.Image;
 import com.firebase.client.Firebase;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.storage.FirebaseStorage;
@@ -34,7 +47,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class AddPostAlbumActivity extends AppCompatActivity implements View.OnClickListener {
+public class AddPostAlbumActivity extends AppCompatActivity implements View.OnClickListener,GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener {
 
     private Button btnAddPhots;
     private Button btnSaveImages;
@@ -50,6 +64,13 @@ public class AddPostAlbumActivity extends AppCompatActivity implements View.OnCl
 
     Context context;
     double latLocation,longLoction = 0;
+
+    ImageButton btnAddPostLocation,btnAllowLocation;
+    private static final String TAG = MainActivity.class.getSimpleName();
+    private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 1000;
+    private Location mLastLocation;
+    private GoogleApiClient mGoogleApiClient;
+    boolean myLocationCheck = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +90,43 @@ public class AddPostAlbumActivity extends AppCompatActivity implements View.OnCl
         listDownloadUri = new ArrayList<Uri>();
         btnAddPhots.setOnClickListener(this);
         btnSaveImages.setOnClickListener(this);
+
+        btnAddPostLocation = (ImageButton) findViewById(R.id.btn_add_post_album_location);
+        btnAllowLocation = (ImageButton) findViewById(R.id.btn_allow_my_location_album);
+
+        btnAddPostLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent in = new Intent(AddPostAlbumActivity.this,AddPostLocationActivity.class);
+                in.putExtra("from",3);
+                startActivity(in);
+            }
+        });
+
+        latLocation = getIntent().getDoubleExtra("lat",0);
+        longLoction = getIntent().getDoubleExtra("long",0);
+
+        if (checkPlayServices()) {
+            buildGoogleApiClient();
+        }
+
+
+        btnAllowLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(myLocationCheck){
+                    latLocation = 0;
+                    longLoction = 0;
+                    mGoogleApiClient.disconnect();
+                    btnAllowLocation.setImageResource(R.mipmap.ic_location_off_black_36dp);
+                    myLocationCheck = false;
+                    btnAddPostLocation.setVisibility(View.VISIBLE);
+                }else{
+                    mGoogleApiClient.connect();
+                    loadAllowMyLocationDialog();
+                }
+            }
+        });
 
     }
 
@@ -160,5 +218,160 @@ public class AddPostAlbumActivity extends AppCompatActivity implements View.OnCl
                 });
             }
         });
+    }
+
+    public boolean checkLocationPermission()
+    {
+        String permission = "android.permission.ACCESS_FINE_LOCATION";
+        int res = checkCallingOrSelfPermission(permission);
+        return (res == PackageManager.PERMISSION_GRANTED);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case 1: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    btnAllowLocation.setImageResource(R.mipmap.ic_location_on_black_36dp);
+                    myLocationCheck = true;
+                    btnAddPostLocation.setVisibility(View.INVISIBLE);
+                    displayLocation();
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    btnAllowLocation.setImageResource(R.mipmap.ic_location_off_black_36dp);
+                    latLocation = 0;
+                    longLoction = 0;
+                    btnAddPostLocation.setVisibility(View.VISIBLE);
+                }
+                return;
+            }
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
+    }
+
+    void loadAllowMyLocationDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+
+        builder.setMessage("If you activate this feature, Aftha7 is going to save your current position")
+                .setTitle("Allow my location ?");
+
+        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked OK button
+                if(checkLocationPermission()){
+                    Toast.makeText(context, "granted", Toast.LENGTH_LONG).show();
+                    btnAllowLocation.setImageResource(R.mipmap.ic_location_on_black_36dp);
+                    myLocationCheck = true;
+                    btnAddPostLocation.setVisibility(View.INVISIBLE);
+                    displayLocation();
+                }else{
+                    Toast.makeText(context, "not granted", Toast.LENGTH_LONG).show();
+                    ActivityCompat.requestPermissions((Activity) context, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+                }
+                dialog.dismiss();
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User cancelled the dialog
+                dialog.dismiss();
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.show();
+    }
+
+
+    private void displayLocation() {
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "FINE_LOCATION & COARSE_LOCATION not granted", Toast.LENGTH_SHORT).show();
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        mLastLocation = LocationServices.FusedLocationApi
+                .getLastLocation(mGoogleApiClient);
+
+        if (mLastLocation != null) {
+            double latitude = mLastLocation.getLatitude();
+            double longitude = mLastLocation.getLongitude();
+
+            latLocation = latitude;
+            longLoction = longitude;
+            //Toast.makeText(context, latLocation + "//" + longLoction, Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(context, "Couldn't get the location. Make sure location is enabled on the device", Toast.LENGTH_LONG).show();
+            latLocation = 0;
+            longLoction = 0;
+            btnAllowLocation.setImageResource(R.mipmap.ic_location_off_black_36dp);
+            btnAddPostLocation.setVisibility(View.VISIBLE);
+        }
+    }
+
+    protected synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API).build();
+    }
+
+    private boolean checkPlayServices() {
+        int resultCode = GooglePlayServicesUtil
+                .isGooglePlayServicesAvailable(this);
+        if (resultCode != ConnectionResult.SUCCESS) {
+            if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
+                GooglePlayServicesUtil.getErrorDialog(resultCode, this,
+                        PLAY_SERVICES_RESOLUTION_REQUEST).show();
+            } else {
+                Toast.makeText(getApplicationContext(),
+                        "This device is not supported.", Toast.LENGTH_LONG)
+                        .show();
+                finish();
+            }
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        //displayLocation();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.i(TAG, "Connection failed: ConnectionResult.getErrorCode() = "
+                + connectionResult.getErrorCode());
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (mGoogleApiClient != null) {
+            mGoogleApiClient.connect();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkPlayServices();
     }
 }
