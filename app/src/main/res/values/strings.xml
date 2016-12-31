@@ -17,6 +17,7 @@
 
     <string-array name="post_options_owner">
         <item>View Location</item>
+        <item>Update post</item>
         <item>Delete post</item>
     </string-array>
     <string name="title_activity_add_post_location">Map</string>

@@ -583,9 +583,14 @@ public class FeedActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        /*if (id == R.id.action_settings) {
             return true;
         }else if(id == R.id.action_refresh){
+            finish();
+            startActivity(getIntent());
+            return true;
+        }*/
+        if(id == R.id.action_refresh){
             finish();
             startActivity(getIntent());
             return true;
@@ -977,6 +982,9 @@ public class FeedActivity extends AppCompatActivity
                                     loadDialogViewPostMap(p);
                                     break;
                                 case 1:
+                                    loadDialogUpdatePost(p);
+                                    break;
+                                case 2:
                                     deletePostDialog(p);
                                     break;
                             }
@@ -1071,7 +1079,37 @@ public class FeedActivity extends AppCompatActivity
                 }
             });
         }
+    }
 
+    void loadDialogUpdatePost(final Post p){
+
+        final Dialog dialog = new Dialog(context);
+        dialog.setContentView(R.layout.dialog_update_post);
+        dialog.setCanceledOnTouchOutside(false);
+
+        // set the custom dialog components - text, image and button
+        Button btnCancel = (Button) dialog.findViewById(R.id.btn_cancel_update_post);
+        Button btnConfirm = (Button) dialog.findViewById(R.id.btn_confirm_update_post);
+        final EditText postText = (EditText) dialog.findViewById(R.id.edit_text_update_post);
+
+        postText.setText(p.getDescription().toString());
+
+        btnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+        btnConfirm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDatabase.child(p.getId()).child("description").setValue(postText.getText().toString());
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
     }
 
 
