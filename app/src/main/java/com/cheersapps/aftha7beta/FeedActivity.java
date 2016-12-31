@@ -278,6 +278,14 @@ public class FeedActivity extends AppCompatActivity
         //End LOADING DATA
 
 
+        currentUserImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(FeedActivity.this, ProfileActivity.class));
+            }
+        });
+
+
 
 
     }

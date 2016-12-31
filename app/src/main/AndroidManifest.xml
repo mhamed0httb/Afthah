@@ -78,7 +78,8 @@
 
         <activity
             android:name=".AddPostLocationActivity"
-            android:label="@string/title_activity_add_post_location"></activity>
+            android:label="@string/title_activity_add_post_location" />
+        <activity android:name=".ProfileActivity"></activity>
     </application>
 
 </manifest>
