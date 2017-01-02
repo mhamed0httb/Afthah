@@ -2,10 +2,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <group android:checkableBehavior="single">
-        <item
+        <!--item
             android:id="@+id/nav_filter"
             android:icon="@android:drawable/ic_menu_sort_by_size"
-            android:title="Filter" />
+            android:title="Filter" /-->
         <item
             android:id="@+id/nav_my_posts"
             android:icon="@drawable/ic_menu_camera"

@@ -25,6 +25,7 @@ import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.afollestad.materialcamera.MaterialCamera;
+import com.cheersapps.aftha7beta.entity.Media;
 import com.cheersapps.aftha7beta.entity.Post;
 import com.firebase.client.Firebase;
 import com.google.android.gms.common.ConnectionResult;
@@ -33,6 +34,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -333,7 +335,8 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
             final Firebase mRef = new Firebase("https://aftha7-2a05e.firebaseio.com/");
             Firebase mmRef = mRef.child("postVideos");
             Firebase newPostRef = mmRef.push();
-            newPostRef.setValue("just a video");
+            //newPostRef.setValue("just a video");
+            newPostRef.setValue(new Media(newPostRef.getKey().toString(),"NOTYET"));
             final String newVideoName = newPostRef.getKey();
             progressDialogUploading.setMessage("Uploading...");
             progressDialogUploading.setCanceledOnTouchOutside(false);
@@ -360,6 +363,7 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
                             refPostName.setValue(p);
                             Log.e("NEW ID//",refPostName.getKey().toString());
                             String postId = refPostName.getKey().toString();
+                            FirebaseDatabase.getInstance().getReference().child("postVideos").child(newVideoName).child("postId").setValue(refPostName.getKey());
                             //END ADD POST HERE
                             startActivity(new Intent(AddPostVideoActivity.this,FeedActivity.class));
                         }

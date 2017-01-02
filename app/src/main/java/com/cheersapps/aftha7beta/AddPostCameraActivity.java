@@ -24,6 +24,7 @@ import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.afollestad.materialcamera.MaterialCamera;
+import com.cheersapps.aftha7beta.entity.Media;
 import com.cheersapps.aftha7beta.entity.Post;
 import com.firebase.client.Firebase;
 import com.google.android.gms.common.ConnectionResult;
@@ -174,7 +175,8 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
         final Firebase mRef = new Firebase("https://aftha7-2a05e.firebaseio.com/");
         Firebase mmRef = mRef.child("postImages");
         Firebase newPostRef = mmRef.push();
-        newPostRef.setValue("just an image");
+        //newPostRef.setValue("just an image");
+        newPostRef.setValue(new Media(newPostRef.getKey().toString(),"NOTYET"));
         final String newImageName = newPostRef.getKey();
         progressDialogUploading.setMessage("Uploading...");
         progressDialogUploading.setCanceledOnTouchOutside(false);
@@ -214,7 +216,8 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
             Firebase refPostName = mPostsRef.push();
             refPostName.setValue(p);
 
-           FirebaseDatabase.getInstance().getReference().child("postImages").child(imgKey).setValue(refPostName.getKey());
+           //FirebaseDatabase.getInstance().getReference().child("postImages").child(imgKey).setValue(refPostName.getKey());
+            FirebaseDatabase.getInstance().getReference().child("postImages").child(imgKey).child("postId").setValue(refPostName.getKey());
             Log.e("NEW ID//",refPostName.getKey().toString());
         }
     }

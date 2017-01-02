@@ -5,8 +5,11 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
@@ -21,6 +24,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
@@ -42,6 +46,7 @@ import com.cheersapps.aftha7beta.entity.Like;
 import com.cheersapps.aftha7beta.entity.Media;
 import com.cheersapps.aftha7beta.entity.Post;
 import com.cheersapps.aftha7beta.entity.User;
+import com.firebase.client.ChildEventListener;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
@@ -52,16 +57,23 @@ import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.oguzdev.circularfloatingactionmenu.library.FloatingActionMenu;
 import com.oguzdev.circularfloatingactionmenu.library.SubActionButton;
 import com.squareup.picasso.Picasso;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -287,7 +299,6 @@ public class FeedActivity extends AppCompatActivity
 
 
 
-
     }
 
 
@@ -487,6 +498,16 @@ public class FeedActivity extends AppCompatActivity
     protected void onStart() {
         super.onStart();
 
+        if(isNetworkAvailable()){
+            Toast.makeText(context, "yess internet", Toast.LENGTH_LONG).show();
+            progressDialogLoadData = new ProgressDialog(context);
+            progressDialogLoadData.setMessage(" Loading Data");
+            progressDialogLoadData.show();
+        }else{
+            Toast.makeText(context, "nooo internet", Toast.LENGTH_LONG).show();
+
+        }
+
         FirebaseRecyclerAdapter<Post, PoViewHolder> firebaseRecyclerAdapter = new FirebaseRecyclerAdapter<Post, PoViewHolder>(
                 Post.class,
                 R.layout.one_post,
@@ -555,6 +576,7 @@ public class FeedActivity extends AppCompatActivity
         };
 
         recyclerView.setAdapter(firebaseRecyclerAdapter);
+        progressDialogLoadData.dismiss();
     }
 
     @Override
@@ -609,7 +631,7 @@ public class FeedActivity extends AppCompatActivity
             // Handle the my posts action
             startActivity(new Intent(FeedActivity.this,MyPostsActivity.class));
         }
-        else if (id == R.id.nav_filter) {
+        //else if (id == R.id.nav_filter) {
             //final Dialog dialog = new Dialog(context,android.R.style.Theme_Material_Light_NoActionBar_Fullscreen);
             //final Dialog dialog = new Dialog(context);
             //dialog.setContentView(R.layout.dialog_feed_filter);
@@ -631,7 +653,7 @@ public class FeedActivity extends AppCompatActivity
 
             //dialog.show();
 
-        }
+        //}
         else if (id == R.id.nav_notifications) {
 
         }
@@ -837,6 +859,7 @@ public class FeedActivity extends AppCompatActivity
         //final LinearLayout horizontalLayout = (LinearLayout) dialog.findViewById(R.id.linear_layout_dialog_view_post_images);
 
         final GridView grid = (GridView) dialog.findViewById(R.id.grid_view_dialog_view_post_images);
+        grid.setColumnWidth(ViewGroup.LayoutParams.MATCH_PARENT);
         final ArrayList<String> images = new ArrayList<String>();
         GridAdapter gridAdapter = new GridAdapter(context, images);
         grid.setAdapter(gridAdapter);
@@ -1018,12 +1041,58 @@ public class FeedActivity extends AppCompatActivity
                     Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
                 }else if(p.getMediaType().equals("IMAGE")){
+                    Firebase MediaRef = new Firebase("https://aftha7-2a05e.firebaseio.com/postImages");
+                    MediaRef.orderByChild("postId").equalTo(p.getId()).addChildEventListener(new ChildEventListener() {
+                        @Override
+                        public void onChildAdded(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+                            final Media m = dataSnapshot.getValue(Media.class);
+                            Log.e("POSTIDD//",p.getId());
+                            Log.e("IMGIDD//", m.getDownloadURL());
+                            StorageReference mStorage = FirebaseStorage.getInstance().getReference();
+                            StorageReference desertRef = mStorage.child("postPhotos/"+m.getDownloadURL().toString());
+                            desertRef.delete().addOnSuccessListener(new OnSuccessListener() {
+                                @Override
+                                public void onSuccess(Object o) {
+                                    FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
+                                    FirebaseDatabase.getInstance().getReference().child("postImages").child(m.getDownloadURL()).removeValue();
+                                    Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception exception) {
+                                    // Uh-oh, an error occurred!
+                                    Toast.makeText(context, "error on delete", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onChildChanged(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+
+                        }
+
+                        @Override
+                        public void onChildRemoved(com.firebase.client.DataSnapshot dataSnapshot) {
+
+                        }
+
+                        @Override
+                        public void onChildMoved(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+
+                        }
+
+                        @Override
+                        public void onCancelled(FirebaseError firebaseError) {
+
+                        }
+                    });
                     /*DatabaseReference dR = FirebaseDatabase.getInstance().getReference().child("postImages");
-                    dR.orderByValue().equalTo(p.getId()).addValueEventListener(new ValueEventListener() {
+                    dR.orderByChild("postId").equalTo(p.getId()).addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
+                            Media m = dataSnapshot.getValue(Media.class);
                             Log.e("POSTIDD//",p.getId());
-                            Log.e("IMGIDD//", dataSnapshot.getKey());
+                            Log.e("IMGIDD//", m.getDownloadURL());
                         }
 
                         @Override
@@ -1031,10 +1100,117 @@ public class FeedActivity extends AppCompatActivity
 
                         }
                     });*/
-                }else{
-                    FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
+                }else if(p.getMediaType().equals("VIDEO")){
+                    Firebase MediaRef = new Firebase("https://aftha7-2a05e.firebaseio.com/postVideos");
+                    MediaRef.orderByChild("postId").equalTo(p.getId()).addChildEventListener(new ChildEventListener() {
+                        @Override
+                        public void onChildAdded(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+                            final Media m = dataSnapshot.getValue(Media.class);
+                            Log.e("POSTIDD//",p.getId());
+                            Log.e("IMGIDD//", m.getDownloadURL());
+                            StorageReference mStorage = FirebaseStorage.getInstance().getReference();
+                            StorageReference desertRef = mStorage.child("postVideos/"+m.getDownloadURL().toString());
+                            desertRef.delete().addOnSuccessListener(new OnSuccessListener() {
+                                @Override
+                                public void onSuccess(Object o) {
+                                    FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
+                                    FirebaseDatabase.getInstance().getReference().child("postVideos").child(m.getDownloadURL()).removeValue();
+                                    Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception exception) {
+                                    // Uh-oh, an error occurred!
+                                    Toast.makeText(context, "error on delete", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onChildChanged(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+
+                        }
+
+                        @Override
+                        public void onChildRemoved(com.firebase.client.DataSnapshot dataSnapshot) {
+
+                        }
+
+                        @Override
+                        public void onChildMoved(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+
+                        }
+
+                        @Override
+                        public void onCancelled(FirebaseError firebaseError) {
+
+                        }
+                    });
+                    /*DatabaseReference dR = FirebaseDatabase.getInstance().getReference().child("postImages");
+                    dR.orderByChild("postId").equalTo(p.getId()).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            Media m = dataSnapshot.getValue(Media.class);
+                            Log.e("POSTIDD//",p.getId());
+                            Log.e("IMGIDD//", m.getDownloadURL());
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });*/
+                }else if(p.getMediaType().equals("ALBUM")){
+                    Firebase MediaRef = new Firebase("https://aftha7-2a05e.firebaseio.com/postImages");
+                    MediaRef.orderByChild("postId").equalTo(p.getId()).addChildEventListener(new ChildEventListener() {
+                        @Override
+                        public void onChildAdded(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+                            final Media m = dataSnapshot.getValue(Media.class);
+                            Log.e("POSTIDD//",p.getId());
+                            Log.e("IMGIDD//", m.getDownloadURL());
+                            StorageReference mStorage = FirebaseStorage.getInstance().getReference();
+                            StorageReference desertRef = mStorage.child("postPhotos/"+m.getDownloadURL().toString());
+                            desertRef.delete().addOnSuccessListener(new OnSuccessListener() {
+                                @Override
+                                public void onSuccess(Object o) {
+                                    FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
+                                    FirebaseDatabase.getInstance().getReference().child("postImages").child(m.getDownloadURL()).removeValue();
+                                    Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception exception) {
+                                    // Uh-oh, an error occurred!
+                                    Toast.makeText(context, "error on delete", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onChildChanged(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+
+                        }
+
+                        @Override
+                        public void onChildRemoved(com.firebase.client.DataSnapshot dataSnapshot) {
+
+                        }
+
+                        @Override
+                        public void onChildMoved(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+
+                        }
+
+                        @Override
+                        public void onCancelled(FirebaseError firebaseError) {
+
+                        }
+                    });
+                }
+                else{
+                    /*FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
                     Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
-                    dialog.dismiss();
+                    dialog.dismiss();*/
                 }
 
             }
@@ -1110,6 +1286,13 @@ public class FeedActivity extends AppCompatActivity
         });
 
         dialog.show();
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null;
     }
 
 

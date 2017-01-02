@@ -36,12 +36,12 @@
         android:id="@+id/grid_view_dialog_view_post_images"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
+        android:verticalSpacing="10dp"/>
+        <!--android:gravity="center"
         android:columnWidth="150dp"
         android:numColumns="auto_fit"
-        android:verticalSpacing="10dp"
         android:horizontalSpacing="10dp"
-        android:stretchMode="spacingWidthUniform"
-        />
+        android:stretchMode="spacingWidthUniform"-->
+
 
 </LinearLayout>

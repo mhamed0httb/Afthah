@@ -37,6 +37,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -57,6 +58,7 @@ public class AddPostAlbumActivity extends AppCompatActivity implements View.OnCl
     GridView gridView;
     ArrayList<Uri> listDownloadUri;
     ArrayList<Image> listImages;
+    ArrayList<String> listNewNames;
     private final int PICK_IMAGE_MULTIPLE =1;
 
     private StorageReference mStorage;
@@ -88,6 +90,7 @@ public class AddPostAlbumActivity extends AppCompatActivity implements View.OnCl
         gridView = (GridView) findViewById(R.id.grid_view_images_album);
         postInputAlbum = (EditText)findViewById(R.id.add_post_input_text_album);
         listDownloadUri = new ArrayList<Uri>();
+        listNewNames = new ArrayList<String>();
         btnAddPhots.setOnClickListener(this);
         btnSaveImages.setOnClickListener(this);
 
@@ -169,8 +172,10 @@ public class AddPostAlbumActivity extends AppCompatActivity implements View.OnCl
         final Firebase mRef = new Firebase("https://aftha7-2a05e.firebaseio.com/");
         Firebase mmRef = mRef.child("postImages");
         Firebase newPostRef = mmRef.push();
-        newPostRef.setValue("just an image");
+        //newPostRef.setValue("just an image");
+        newPostRef.setValue(new Media(newPostRef.getKey().toString(),"NOTYET"));
         final String newImageName = newPostRef.getKey();
+        listNewNames.add(newImageName);
         progressDialogUploading.setMessage("Uploading...");
         progressDialogUploading.setCanceledOnTouchOutside(false);
         progressDialogUploading.show();
@@ -212,6 +217,9 @@ public class AddPostAlbumActivity extends AppCompatActivity implements View.OnCl
                                 mediaRef.push().setValue(media);
                             }
                             //END ADD MEDIA HERE
+                            for(String oneName:listNewNames){
+                                FirebaseDatabase.getInstance().getReference().child("postImages").child(oneName).child("postId").setValue(postId);
+                            }
                             startActivity(new Intent(AddPostAlbumActivity.this, FeedActivity.class));
                         }
                     }
