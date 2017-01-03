@@ -27,11 +27,13 @@ import android.widget.VideoView;
 import com.afollestad.materialcamera.MaterialCamera;
 import com.cheersapps.aftha7beta.entity.Media;
 import com.cheersapps.aftha7beta.entity.Post;
+import com.desai.vatsal.mydynamictoast.MyDynamicToast;
 import com.firebase.client.Firebase;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
@@ -95,6 +97,10 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
 
         latLocation = getIntent().getDoubleExtra("lat",0);
         longLoction = getIntent().getDoubleExtra("long",0);
+
+        if(latLocation != 0 && longLoction != 0 ){
+            MyDynamicToast.informationMessage(AddPostVideoActivity.this, "Location successfully set");
+        }
 
         btnPlayvideo.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -174,6 +180,13 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
                 }
             }
         });
+
+        btnAddPostVideo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MyDynamicToast.warningMessage(AddPostVideoActivity.this, "Please add a Video !!");
+            }
+        });
     }
 
     @Override
@@ -182,20 +195,28 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
         if (requestCode == CAMERA_RQ) {
 
             if (resultCode == RESULT_OK) {
-                Toast.makeText(context, "Saved to: " + data.getDataString(), Toast.LENGTH_LONG).show();
+                //Toast.makeText(context, "Saved to: " + data.getDataString(), Toast.LENGTH_LONG).show();
                 final Uri vidUri = data.getData();
                 displayVideo.setVideoURI(vidUri);
                 displayVideo.start();
                 btnAddPostVideo.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        uploadVideo(vidUri);
+                        if(addPostInputTextVideo.getText().toString().equals("")){
+                            MyDynamicToast.warningMessage(AddPostVideoActivity.this, "Write something !!");
+                        }else if(vidUri == null){
+                            MyDynamicToast.warningMessage(AddPostVideoActivity.this, "Please add a Video !!");
+                        }else{
+                            uploadVideo(vidUri);
+                        }
+
                     }
                 });
             } else if(data != null) {
                 Exception e = (Exception) data.getSerializableExtra(MaterialCamera.ERROR_EXTRA);
                 e.printStackTrace();
-                Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
+                //Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
+                MyDynamicToast.errorMessage(AddPostVideoActivity.this, "Error on Camera : " + e.getMessage());
             }
         }
     }
@@ -257,6 +278,7 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
                     myLocationCheck = true;
                     btnAddPostLocation.setVisibility(View.INVISIBLE);
                     displayLocation();
+                    MyDynamicToast.informationMessage(AddPostVideoActivity.this, "Location granted");
                 } else {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
@@ -264,6 +286,7 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
                     latLocation = 0;
                     longLoction = 0;
                     btnAddPostLocation.setVisibility(View.VISIBLE);
+                    MyDynamicToast.informationMessage(AddPostVideoActivity.this, "Location denied");
                 }
                 return;
             }
@@ -329,7 +352,8 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
     void uploadVideo(Uri u){
         String input = addPostInputTextVideo.getText().toString();
         if(input.equals("")){
-            Toast.makeText(context, "Say something !!", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(context, "Say something !!", Toast.LENGTH_SHORT).show();
+            MyDynamicToast.warningMessage(AddPostVideoActivity.this, "Write something !!");
         }else{
             final ProgressDialog progressDialogUploading = new ProgressDialog(context);
             final Firebase mRef = new Firebase("https://aftha7-2a05e.firebaseio.com/");
@@ -350,7 +374,7 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
                     pathReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                         @Override
                         public void onSuccess(Uri uri) {
-                            Toast.makeText(context, "done : " + uri.toString(), Toast.LENGTH_LONG).show();
+                            //Toast.makeText(context, "done : " + uri.toString(), Toast.LENGTH_LONG).show();
                             //ADD POST HERE
                             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd MMM,yyyy");
                             final String date = simpleDateFormat.format(new Date());
@@ -365,9 +389,15 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
                             String postId = refPostName.getKey().toString();
                             FirebaseDatabase.getInstance().getReference().child("postVideos").child(newVideoName).child("postId").setValue(refPostName.getKey());
                             //END ADD POST HERE
+                            MyDynamicToast.successMessage(AddPostVideoActivity.this, "Post Added Successfully :)");
                             startActivity(new Intent(AddPostVideoActivity.this,FeedActivity.class));
                         }
                     });
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    MyDynamicToast.errorMessage(AddPostVideoActivity.this, "Something went wrong");
                 }
             });
         }
@@ -390,13 +420,14 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
             public void onClick(DialogInterface dialog, int id) {
                 // User clicked OK button
                 if(checkLocationPermission()){
-                    Toast.makeText(context, "granted", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(context, "granted", Toast.LENGTH_LONG).show();
+                    MyDynamicToast.informationMessage(AddPostVideoActivity.this, "Location granted");
                     btnAllowLocation.setImageResource(R.mipmap.ic_location_on_black_36dp);
                     myLocationCheck = true;
                     btnAddPostLocation.setVisibility(View.INVISIBLE);
                     displayLocation();
                 }else{
-                    Toast.makeText(context, "not granted", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(context, "not granted", Toast.LENGTH_LONG).show();
                     ActivityCompat.requestPermissions((Activity) context, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 4);
                 }
                 dialog.dismiss();
@@ -439,7 +470,8 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
             longLoction = longitude;
             //Toast.makeText(context, latLocation + "//" + longLoction, Toast.LENGTH_LONG).show();
         } else {
-            Toast.makeText(context, "Couldn't get the location. Make sure location is enabled on the device", Toast.LENGTH_LONG).show();
+            //Toast.makeText(context, "Couldn't get the location. Make sure location is enabled on the device", Toast.LENGTH_LONG).show();
+            MyDynamicToast.warningMessage(AddPostVideoActivity.this, "Couldn't get the location. Make sure location is enabled on the device");
             latLocation = 0;
             longLoction = 0;
             btnAllowLocation.setImageResource(R.mipmap.ic_location_off_black_36dp);
@@ -462,9 +494,10 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
                 GooglePlayServicesUtil.getErrorDialog(resultCode, this,
                         PLAY_SERVICES_RESOLUTION_REQUEST).show();
             } else {
-                Toast.makeText(getApplicationContext(),
-                        "This device is not supported.", Toast.LENGTH_LONG)
-                        .show();
+                //Toast.makeText(getApplicationContext(),
+                        //"This device is not supported.", Toast.LENGTH_LONG)
+                        //.show();
+                MyDynamicToast.informationMessage(AddPostVideoActivity.this, "This device is not supported");
                 finish();
             }
             return false;

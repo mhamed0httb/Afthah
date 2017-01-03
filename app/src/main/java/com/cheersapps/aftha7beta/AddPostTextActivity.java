@@ -27,6 +27,7 @@ import android.widget.Toast;
 
 import com.cheersapps.aftha7beta.entity.Post;
 import com.cheersapps.aftha7beta.entity.User;
+import com.desai.vatsal.mydynamictoast.MyDynamicToast;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.google.android.gms.common.ConnectionResult;
@@ -90,6 +91,10 @@ public class AddPostTextActivity extends AppCompatActivity implements GoogleApiC
 
         latLocation = getIntent().getDoubleExtra("lat",0);
         longLoction = getIntent().getDoubleExtra("long",0);
+
+        if(latLocation != 0 && longLoction != 0 ){
+            MyDynamicToast.informationMessage(AddPostTextActivity.this, "Location successfully set");
+        }
 
 
         btnAddPostText.setOnClickListener(new View.OnClickListener() {
@@ -158,6 +163,7 @@ public class AddPostTextActivity extends AppCompatActivity implements GoogleApiC
                     myLocationCheck = true;
                     btnAddPostLocation.setVisibility(View.INVISIBLE);
                     displayLocation();
+                    MyDynamicToast.informationMessage(AddPostTextActivity.this, "Location granted");
                 } else {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
@@ -165,6 +171,7 @@ public class AddPostTextActivity extends AppCompatActivity implements GoogleApiC
                     latLocation = 0;
                     longLoction = 0;
                     btnAddPostLocation.setVisibility(View.VISIBLE);
+                    MyDynamicToast.informationMessage(AddPostTextActivity.this, "Location denied");
                 }
                 return;
             }
@@ -176,7 +183,8 @@ public class AddPostTextActivity extends AppCompatActivity implements GoogleApiC
     private void addPost(){
         String input = inputNewPostText.getText().toString();
         if(input.equals("")){
-            Toast.makeText(context, "Say something", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(context, "Say something", Toast.LENGTH_SHORT).show();
+            MyDynamicToast.warningMessage(AddPostTextActivity.this, "Write something !!");
         }else{
             ProgressDialog loading = new ProgressDialog(context);
             loading.setMessage("Please wait");
@@ -200,6 +208,7 @@ public class AddPostTextActivity extends AppCompatActivity implements GoogleApiC
                     //Post p = new Post(0,inputNewPostText.getText().toString(),"https://firebasestorage.googleapis.com/v0/b/aftha7-2a05e.appspot.com/o/white.png?alt=media&token=7c98551c-e474-430c-956e-0f78715ea30f",date,time,latLocation,longLoction,ownerUser);
                     Post p = new Post(0,inputNewPostText.getText().toString(),"NOFILE","NOFILE",date,time,latLocation,longLoction,ownerUid);
                     mRef.push().setValue(p);
+                    MyDynamicToast.successMessage(AddPostTextActivity.this, "Post Added Successfully :)");
                     Intent in = new Intent(AddPostTextActivity.this, FeedActivity.class);
                     startActivity(in);
                     //END EVERYTHING ELSE HERE
@@ -225,11 +234,12 @@ public class AddPostTextActivity extends AppCompatActivity implements GoogleApiC
             public void onClick(DialogInterface dialog, int id) {
                 // User clicked OK button
                 if(checkLocationPermission()){
-                    Toast.makeText(context, "granted", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(context, "granted", Toast.LENGTH_LONG).show();
                     btnAllowLocation.setImageResource(R.mipmap.ic_location_on_black_36dp);
                     myLocationCheck = true;
                     btnAddPostLocation.setVisibility(View.INVISIBLE);
                     displayLocation();
+                    MyDynamicToast.informationMessage(AddPostTextActivity.this, "Location granted");
                 }else{
                     Toast.makeText(context, "not granted", Toast.LENGTH_LONG).show();
                     ActivityCompat.requestPermissions((Activity) context, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);

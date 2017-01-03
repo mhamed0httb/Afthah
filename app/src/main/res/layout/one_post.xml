@@ -25,7 +25,6 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:weightSum="7"
-            android:paddingTop="16dp"
             android:paddingLeft="16dp"
             android:paddingRight="16dp">
 
@@ -57,7 +56,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Mhamed Hattab"
+                    android:text="User"
                     android:id="@+id/post_owner_name"
                     android:layout_marginLeft="10dp"
                     android:textSize="15dp"

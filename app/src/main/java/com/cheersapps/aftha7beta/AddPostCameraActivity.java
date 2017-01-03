@@ -26,11 +26,13 @@ import android.widget.VideoView;
 import com.afollestad.materialcamera.MaterialCamera;
 import com.cheersapps.aftha7beta.entity.Media;
 import com.cheersapps.aftha7beta.entity.Post;
+import com.desai.vatsal.mydynamictoast.MyDynamicToast;
 import com.firebase.client.Firebase;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
@@ -90,6 +92,10 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
         latLocation = getIntent().getDoubleExtra("lat",0);
         longLoction = getIntent().getDoubleExtra("long",0);
 
+        if(latLocation != 0 && longLoction != 0 ){
+            MyDynamicToast.informationMessage(AddPostCameraActivity.this, "Location successfully set");
+        }
+
         btnChangePhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -135,6 +141,13 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
             }
         });
 
+        btnAddPostCamera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MyDynamicToast.warningMessage(AddPostCameraActivity.this, "Please add an Image !!");
+            }
+        });
+
         startMaterialCamera();
 
     }
@@ -145,14 +158,20 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
         if (requestCode == CAMERA_RQ) {
 
             if (resultCode == RESULT_OK) {
-                Toast.makeText(context, "Saved to: " + data.getDataString(), Toast.LENGTH_LONG).show();
+                //Toast.makeText(context, "Saved to: " + data.getDataString(), Toast.LENGTH_LONG).show();
                 final Uri imUri = data.getData();
 
                 displayImageCamera.setImageURI(imUri);
                 btnAddPostCamera.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        uploadImage(imUri);
+                        if(addPostInputTextCamera.getText().toString().equals("")){
+                            MyDynamicToast.warningMessage(AddPostCameraActivity.this, "Write something !!");
+                        }else if(imUri == null){
+                            MyDynamicToast.warningMessage(AddPostCameraActivity.this, "Please add an Image !!");
+                        }else{
+                            uploadImage(imUri);
+                        }
                     }
                 });
             } else if(data != null) {
@@ -190,13 +209,19 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
                 pathReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
-                        Toast.makeText(context, "done : " + uri.toString(), Toast.LENGTH_LONG).show();
+                        //Toast.makeText(context, "done : " + uri.toString(), Toast.LENGTH_LONG).show();
                         //ADD POST HERE
                         addPost(uri, newImageName);
                         //END ADD POST HERE
+                        MyDynamicToast.successMessage(AddPostCameraActivity.this, "Post Added Successfully :)");
                         startActivity(new Intent(AddPostCameraActivity.this,FeedActivity.class));
                     }
                 });
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                MyDynamicToast.errorMessage(AddPostCameraActivity.this, "Something went wrong");
             }
         });
     }
@@ -204,7 +229,8 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
     private void addPost(Uri uriImage, String imgKey){
         String input = addPostInputTextCamera.getText().toString();
         if(input.equals("")){
-            Toast.makeText(context, "Say something !!", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(context, "Say something !!", Toast.LENGTH_SHORT).show();
+            MyDynamicToast.warningMessage(AddPostCameraActivity.this, "Write something !!");
         }else{
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd MMM,yyyy");
             final String date = simpleDateFormat.format(new Date());
@@ -240,6 +266,7 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
                     myLocationCheck = true;
                     btnAddPostLocation.setVisibility(View.INVISIBLE);
                     displayLocation();
+                    MyDynamicToast.informationMessage(AddPostCameraActivity.this, "Location granted");
                 } else {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
@@ -247,6 +274,7 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
                     latLocation = 0;
                     longLoction = 0;
                     btnAddPostLocation.setVisibility(View.VISIBLE);
+                    MyDynamicToast.informationMessage(AddPostCameraActivity.this, "Location denied");
                 }
                 return;
             }
@@ -265,13 +293,14 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
             public void onClick(DialogInterface dialog, int id) {
                 // User clicked OK button
                 if(checkLocationPermission()){
-                    Toast.makeText(context, "granted", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(context, "granted", Toast.LENGTH_LONG).show();
+                    MyDynamicToast.informationMessage(AddPostCameraActivity.this, "Location granted");
                     btnAllowLocation.setImageResource(R.mipmap.ic_location_on_black_36dp);
                     myLocationCheck = true;
                     btnAddPostLocation.setVisibility(View.INVISIBLE);
                     displayLocation();
                 }else{
-                    Toast.makeText(context, "not granted", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(context, "not granted", Toast.LENGTH_LONG).show();
                     ActivityCompat.requestPermissions((Activity) context, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);
                 }
                 dialog.dismiss();

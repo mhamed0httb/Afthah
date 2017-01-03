@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
@@ -30,11 +31,13 @@ import com.cheersapps.aftha7beta.entity.Post;
 import com.darsh.multipleimageselect.activities.AlbumSelectActivity;
 import com.darsh.multipleimageselect.helpers.Constants;
 import com.darsh.multipleimageselect.models.Image;
+import com.desai.vatsal.mydynamictoast.MyDynamicToast;
 import com.firebase.client.Firebase;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
@@ -109,6 +112,10 @@ public class AddPostAlbumActivity extends AppCompatActivity implements View.OnCl
         latLocation = getIntent().getDoubleExtra("lat",0);
         longLoction = getIntent().getDoubleExtra("long",0);
 
+        if(latLocation != 0 && longLoction != 0 ){
+            MyDynamicToast.informationMessage(AddPostAlbumActivity.this, "Location successfully set");
+        }
+
         if (checkPlayServices()) {
             buildGoogleApiClient();
         }
@@ -143,7 +150,14 @@ public class AddPostAlbumActivity extends AppCompatActivity implements View.OnCl
                 startActivityForResult(intent, Constants.REQUEST_CODE);
                 break;
             case R.id.btnSaveImages:
-                uploadImage(listImages,0);
+                if(postInputAlbum.getText().toString().equals("")){
+                    MyDynamicToast.warningMessage(AddPostAlbumActivity.this, "Write something !!");
+                }else if(listImages == null){
+                    MyDynamicToast.warningMessage(AddPostAlbumActivity.this, "Please add at least one image");
+                }else{
+                    uploadImage(listImages,0);
+                }
+
                 break;
         }
     }
@@ -189,12 +203,12 @@ public class AddPostAlbumActivity extends AppCompatActivity implements View.OnCl
                 pathReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
-                        Toast.makeText(context, "done : " + uri.toString(), Toast.LENGTH_LONG).show();
+                        //Toast.makeText(context, "done : " + uri.toString(), Toast.LENGTH_LONG).show();
                         listDownloadUri.add(uri);
                         if(position < list.size()-1){
                             uploadImage(list,position+1);
                         }else{
-                            Toast.makeText(context, "All Done : ", Toast.LENGTH_LONG).show();
+                            //Toast.makeText(context, "All Done : ", Toast.LENGTH_LONG).show();
 
                             //ADD POST HERE
                             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd MMM,yyyy");
@@ -220,10 +234,16 @@ public class AddPostAlbumActivity extends AppCompatActivity implements View.OnCl
                             for(String oneName:listNewNames){
                                 FirebaseDatabase.getInstance().getReference().child("postImages").child(oneName).child("postId").setValue(postId);
                             }
+                            MyDynamicToast.successMessage(AddPostAlbumActivity.this, "Post Added Successfully :)");
                             startActivity(new Intent(AddPostAlbumActivity.this, FeedActivity.class));
                         }
                     }
                 });
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                MyDynamicToast.errorMessage(AddPostAlbumActivity.this, "Something went wrong");
             }
         });
     }
@@ -246,6 +266,7 @@ public class AddPostAlbumActivity extends AppCompatActivity implements View.OnCl
                     myLocationCheck = true;
                     btnAddPostLocation.setVisibility(View.INVISIBLE);
                     displayLocation();
+                    MyDynamicToast.informationMessage(AddPostAlbumActivity.this, "Location granted");
                 } else {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
@@ -253,6 +274,7 @@ public class AddPostAlbumActivity extends AppCompatActivity implements View.OnCl
                     latLocation = 0;
                     longLoction = 0;
                     btnAddPostLocation.setVisibility(View.VISIBLE);
+                    MyDynamicToast.informationMessage(AddPostAlbumActivity.this, "Location denied");
                 }
                 return;
             }
@@ -271,7 +293,8 @@ public class AddPostAlbumActivity extends AppCompatActivity implements View.OnCl
             public void onClick(DialogInterface dialog, int id) {
                 // User clicked OK button
                 if(checkLocationPermission()){
-                    Toast.makeText(context, "granted", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(context, "granted", Toast.LENGTH_LONG).show();
+                    MyDynamicToast.informationMessage(AddPostAlbumActivity.this, "Location granted");
                     btnAllowLocation.setImageResource(R.mipmap.ic_location_on_black_36dp);
                     myLocationCheck = true;
                     btnAddPostLocation.setVisibility(View.INVISIBLE);

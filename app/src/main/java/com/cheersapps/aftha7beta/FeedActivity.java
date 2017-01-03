@@ -5,6 +5,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -12,6 +13,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -46,6 +48,7 @@ import com.cheersapps.aftha7beta.entity.Like;
 import com.cheersapps.aftha7beta.entity.Media;
 import com.cheersapps.aftha7beta.entity.Post;
 import com.cheersapps.aftha7beta.entity.User;
+import com.desai.vatsal.mydynamictoast.MyDynamicToast;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -372,7 +375,8 @@ public class FeedActivity extends AppCompatActivity
                 Uri uriVideo = Uri.parse(pathVideo);
                 postVideo.setVideoURI(uriVideo);
                 postVideo.start();*/
-                Picasso.with(context).load(R.drawable.video_player_256x256).centerCrop().fit().into(postImage);
+                //Picasso.with(context).load(R.drawable.video_player_256x256).centerCrop().fit().into(postImage);
+                Picasso.with(context).load(R.drawable.video_play).centerCrop().fit().into(postImage);
             }else if(mediaType.equals("ALBUM")){
                 //SET WEIGHT
                 btnPlusImgs.setVisibility(View.VISIBLE);
@@ -499,13 +503,14 @@ public class FeedActivity extends AppCompatActivity
         super.onStart();
 
         if(isNetworkAvailable()){
-            Toast.makeText(context, "yess internet", Toast.LENGTH_LONG).show();
+            //Toast.makeText(context, "yess internet", Toast.LENGTH_LONG).show();
             progressDialogLoadData = new ProgressDialog(context);
             progressDialogLoadData.setMessage(" Loading Data");
+            progressDialogLoadData.setCanceledOnTouchOutside(false);
             progressDialogLoadData.show();
         }else{
-            Toast.makeText(context, "nooo internet", Toast.LENGTH_LONG).show();
-
+            //Toast.makeText(context, "nooo internet", Toast.LENGTH_LONG).show();
+            MyDynamicToast.warningMessage(FeedActivity.this, "No Internet Connection");
         }
 
         FirebaseRecyclerAdapter<Post, PoViewHolder> firebaseRecyclerAdapter = new FirebaseRecyclerAdapter<Post, PoViewHolder>(
@@ -517,6 +522,7 @@ public class FeedActivity extends AppCompatActivity
         ) {
             @Override
             protected void populateViewHolder(PoViewHolder viewHolder, Post model, int position) {
+                progressDialogLoadData.dismiss();
                 String postKey = getRef(position).getKey();
                 model.setId(postKey);
                 final Post p = model;
@@ -576,7 +582,7 @@ public class FeedActivity extends AppCompatActivity
         };
 
         recyclerView.setAdapter(firebaseRecyclerAdapter);
-        progressDialogLoadData.dismiss();
+
     }
 
     @Override
@@ -585,8 +591,12 @@ public class FeedActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            Intent in = new Intent(FeedActivity.this,MainActivity.class);
-            startActivity(in);
+            //Intent in = new Intent(FeedActivity.this,MainActivity.class);
+            //startActivity(in);
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.addCategory(Intent.CATEGORY_HOME);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
         }
     }
 
@@ -1036,10 +1046,12 @@ public class FeedActivity extends AppCompatActivity
         builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 // User clicked OK button
+                //Toast.makeText(context, "Deleting ...", Toast.LENGTH_SHORT).show();
                 if(p.getMediaType().equals("NOFILE")){
                     FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
-                    Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
+                    MyDynamicToast.successMessage(FeedActivity.this, "Post Deleted");
                 }else if(p.getMediaType().equals("IMAGE")){
                     Firebase MediaRef = new Firebase("https://aftha7-2a05e.firebaseio.com/postImages");
                     MediaRef.orderByChild("postId").equalTo(p.getId()).addChildEventListener(new ChildEventListener() {
@@ -1055,13 +1067,15 @@ public class FeedActivity extends AppCompatActivity
                                 public void onSuccess(Object o) {
                                     FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
                                     FirebaseDatabase.getInstance().getReference().child("postImages").child(m.getDownloadURL()).removeValue();
-                                    Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                                    //Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                                    MyDynamicToast.successMessage(FeedActivity.this, "Post Deleted");
                                 }
                             }).addOnFailureListener(new OnFailureListener() {
                                 @Override
                                 public void onFailure(@NonNull Exception exception) {
                                     // Uh-oh, an error occurred!
-                                    Toast.makeText(context, "error on delete", Toast.LENGTH_SHORT).show();
+                                    //Toast.makeText(context, "error on delete", Toast.LENGTH_SHORT).show();
+                                    MyDynamicToast.errorMessage(FeedActivity.this, "Something went wrong !!");
                                 }
                             });
                         }
@@ -1115,13 +1129,15 @@ public class FeedActivity extends AppCompatActivity
                                 public void onSuccess(Object o) {
                                     FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
                                     FirebaseDatabase.getInstance().getReference().child("postVideos").child(m.getDownloadURL()).removeValue();
-                                    Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                                    //Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                                    MyDynamicToast.successMessage(FeedActivity.this, "Post Deleted");
                                 }
                             }).addOnFailureListener(new OnFailureListener() {
                                 @Override
                                 public void onFailure(@NonNull Exception exception) {
                                     // Uh-oh, an error occurred!
-                                    Toast.makeText(context, "error on delete", Toast.LENGTH_SHORT).show();
+                                    //Toast.makeText(context, "error on delete", Toast.LENGTH_SHORT).show();
+                                    MyDynamicToast.errorMessage(FeedActivity.this, "Something went wrong !!");
                                 }
                             });
                         }
@@ -1175,13 +1191,15 @@ public class FeedActivity extends AppCompatActivity
                                 public void onSuccess(Object o) {
                                     FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
                                     FirebaseDatabase.getInstance().getReference().child("postImages").child(m.getDownloadURL()).removeValue();
-                                    Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                                    //Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                                    MyDynamicToast.successMessage(FeedActivity.this, "Post Deleted");
                                 }
                             }).addOnFailureListener(new OnFailureListener() {
                                 @Override
                                 public void onFailure(@NonNull Exception exception) {
                                     // Uh-oh, an error occurred!
-                                    Toast.makeText(context, "error on delete", Toast.LENGTH_SHORT).show();
+                                    //Toast.makeText(context, "error on delete", Toast.LENGTH_SHORT).show();
+                                    MyDynamicToast.errorMessage(FeedActivity.this, "Something went wrong !!");
                                 }
                             });
                         }
@@ -1208,9 +1226,10 @@ public class FeedActivity extends AppCompatActivity
                     });
                 }
                 else{
-                    /*FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
-                    Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
-                    dialog.dismiss();*/
+                    FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
+                    //Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                    MyDynamicToast.successMessage(FeedActivity.this, "Post Deleted");
                 }
 
             }
@@ -1222,14 +1241,22 @@ public class FeedActivity extends AppCompatActivity
             }
         });
 
-        AlertDialog dialog = builder.create();
+        final AlertDialog dialog = builder.create();
         dialog.setCanceledOnTouchOutside(false);
+        dialog.setOnShowListener( new DialogInterface.OnShowListener() {
+                                      @Override
+                                      public void onShow(DialogInterface arg0) {
+                                          dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.RED);
+                                          dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.BLACK);
+                                      }
+                                  });
         dialog.show();
     }
 
     void loadDialogViewPostMap(final Post p){
         if(p.getLatLocation() == 0 && p.getLongLocation() == 0){
-            Toast.makeText(context, "Location not specified", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(context, "Location not specified", Toast.LENGTH_SHORT).show();
+            MyDynamicToast.informationMessage(FeedActivity.this, "Location not specifiedf");
         }else{
             Dialog dialog = new Dialog(context,android.R.style.Theme_Material_Light_NoActionBar_Fullscreen);
             dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -1282,6 +1309,7 @@ public class FeedActivity extends AppCompatActivity
             public void onClick(View v) {
                 mDatabase.child(p.getId()).child("description").setValue(postText.getText().toString());
                 dialog.dismiss();
+                MyDynamicToast.successMessage(FeedActivity.this, "Post updated");
             }
         });
 

@@ -50,14 +50,14 @@
             android:id="@+id/btnAddPhots"
             android:layout_width="match_parent"
             android:layout_weight="1"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:text="Add Photos"/>
 
         <Button
             android:id="@+id/btnSaveImages"
             android:layout_width="match_parent"
             android:layout_weight="1"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:text="Aftha7"
             style="@style/Widget.AppCompat.Button.Colored"
             android:backgroundTint="@color/colorPrimaryDark"/>
