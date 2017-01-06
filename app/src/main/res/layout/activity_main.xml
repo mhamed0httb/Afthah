@@ -22,31 +22,36 @@
         android:layout_marginBottom="15dp"
         android:textColor="@color/colorWhite"
         android:textColorHint="@color/colorWhite"
+
         android:layout_marginTop="20dp"
         android:layout_centerInParent="true"/>
-
     <Button
         android:id="@+id/btn_signin"
         android:layout_width="250dp"
-        android:layout_marginTop="38dp"
+        android:layout_marginTop="68dp"
         android:layout_height="35dp"
+
         android:textColor="#fff"
         android:text="Sign In"
         android:layout_below="@+id/et_password"
         android:layout_alignLeft="@+id/btn_signup"
         android:layout_alignStart="@+id/btn_signup" />
-
     <Button
         android:id="@+id/btn_signup"
         android:layout_width="250dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="480dp"
         android:layout_height="35dp"
         android:layout_centerHorizontal="true"
+
         android:textColor="#fff"
         android:text="Sign Up"
-        android:layout_below="@+id/btn_signin"
 
         />
+
+
+
+
+
 
     <EditText
         android:id="@+id/et_signin"

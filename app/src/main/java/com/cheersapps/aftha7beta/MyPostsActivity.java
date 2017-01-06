@@ -5,8 +5,10 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
@@ -16,6 +18,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
@@ -27,6 +30,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import com.andexert.library.RippleView;
 import com.cheersapps.aftha7beta.adapter.CommentCustomAdapter;
 import com.cheersapps.aftha7beta.adapter.GridAdapter;
 import com.cheersapps.aftha7beta.entity.Comment;
@@ -34,13 +38,26 @@ import com.cheersapps.aftha7beta.entity.Like;
 import com.cheersapps.aftha7beta.entity.Media;
 import com.cheersapps.aftha7beta.entity.Post;
 import com.cheersapps.aftha7beta.entity.User;
+import com.desai.vatsal.mydynamictoast.MyDynamicToast;
+import com.firebase.client.ChildEventListener;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.MapsInitializer;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 
 import java.text.DateFormat;
@@ -79,171 +96,26 @@ public class MyPostsActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
 
-    public static class PoViewHolder extends RecyclerView.ViewHolder {
-        View mView;
-        ImageButton btnLike;
-        ImageButton btnComment;
-        ImageView postImage;
-        ImageButton postAlbumPlus;
-        ImageButton postRemove;
-        public PoViewHolder(View itemView) {
-            super(itemView);
-            mView = itemView;
-            btnLike = (ImageButton)itemView.findViewById(R.id.btn_like_post);
-            btnComment = (ImageButton)itemView.findViewById(R.id.btn_comment_post);
-            postImage = (ImageView)mView.findViewById(R.id.post_media);
-            postAlbumPlus = (ImageButton)mView.findViewById(R.id.post_album_plus);
-            postRemove = (ImageButton)mView.findViewById(R.id.btn_view_my_post_trash);
-        }
-        public void setDescription(String desc){
-            TextView post_desc = (TextView) mView.findViewById(R.id.post_description);
-            post_desc.setText(desc);
-        }
-        public void setMedia(final Context context, String image, String mediaType, final Post post){
-            LinearLayout videoHolder = (LinearLayout)mView.findViewById(R.id.video_holder);
-            LinearLayout albumHolder = (LinearLayout)mView.findViewById(R.id.post_album_holder);
-            VideoView postVideo = (VideoView)mView.findViewById(R.id.post_video);
-            final ImageView postAlbum = (ImageView)mView.findViewById(R.id.post_album);
-            if(mediaType.equals("NOFILE")){
-                postImage.setVisibility(View.GONE);
-                videoHolder.setVisibility(View.GONE);
-                albumHolder.setVisibility(View.GONE);
-            }else if(mediaType.equals("IMAGE")){
-                postImage.setVisibility(View.VISIBLE);
-                Picasso.with(context).load(image).placeholder(R.drawable.please_wait).centerCrop().fit().into(postImage);
-                videoHolder.setVisibility(View.GONE);
-                albumHolder.setVisibility(View.GONE);
-            }else if(mediaType.equals("VIDEO")){
-                postImage.setVisibility(View.VISIBLE);
-                videoHolder.setVisibility(View.GONE);
-                albumHolder.setVisibility(View.GONE);
-                Picasso.with(context).load(R.drawable.video_player_512x512).centerCrop().fit().into(postImage);
-            }else if(mediaType.equals("ALBUM")){
-                postImage.setVisibility(View.GONE);
-                videoHolder.setVisibility(View.GONE);
-                albumHolder.setVisibility(View.VISIBLE);
-                //GET MEDIA DATA
-                post.getListMediaUrl().clear();
-                Firebase MediaRef = new Firebase("https://aftha7-2a05e.firebaseio.com/media");
-                MediaRef.orderByChild("postId").equalTo(post.getId()).addChildEventListener(new com.firebase.client.ChildEventListener() {
-                    @Override
-                    public void onChildAdded(com.firebase.client.DataSnapshot dataSnapshot, String s) {
-                        Media media = dataSnapshot.getValue(Media.class);
-                        media.setId(dataSnapshot.getKey());
-                        post.getListMediaUrl().add(media.getDownloadURL().toString());
-                        Picasso.with(context).load(media.getDownloadURL().toString()).placeholder(R.drawable.please_wait).centerCrop().fit().into(postAlbum);
-                    }
 
-                    @Override
-                    public void onChildChanged(com.firebase.client.DataSnapshot dataSnapshot, String s) {
 
-                    }
 
-                    @Override
-                    public void onChildRemoved(com.firebase.client.DataSnapshot dataSnapshot) {
-
-                    }
-
-                    @Override
-                    public void onChildMoved(com.firebase.client.DataSnapshot dataSnapshot, String s) {
-
-                    }
-
-                    @Override
-                    public void onCancelled(FirebaseError firebaseError) {
-
-                    }
-                });
-                //END GET MEDIA DATA
-            }
-
-        }
-        public void setOwner(final Context context,String ownerUid){
-            final TextView ownerName = (TextView)itemView.findViewById(R.id.post_owner_name);
-            final ImageView ownerImage = (ImageView)itemView.findViewById(R.id.post_owner_image);
-            //GET OWNER DATA
-            Firebase ownerRef = new Firebase("https://aftha7-2a05e.firebaseio.com/users/" + ownerUid);
-            ownerRef.addListenerForSingleValueEvent(new com.firebase.client.ValueEventListener() {
-                @Override
-                public void onDataChange(com.firebase.client.DataSnapshot dataSnapshot) {
-                    User ow = dataSnapshot.getValue(User.class);
-                    ownerName.setText(ow.getName());
-                    Picasso.with(context).load(ow.getImage().toString()).resize(128,128)
-                            .centerCrop().into(ownerImage);
-                    //EVERYTHING ELSE HERE
-                    //END EVERYTHING ELSE HERE
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-
-                }
-            });
-            //END GET OWNER DATA
-        }
-        public void setPostTime(String date, String time){
-            TextView postTime = (TextView)itemView.findViewById(R.id.post_time);
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd MMM,yyyy");
-            final String todayDate = simpleDateFormat.format(new Date());
-            if(date.equals(todayDate)){
-                postTime.setText(time);
-            }else{
-                postTime.setText(date);
-            }
-        }
-        public void setLike(String postKey){
-            //GET LIKES
-            Firebase getLikeRef = new Firebase("https://aftha7-2a05e.firebaseio.com/likes/");
-            getLikeRef.orderByChild("postId").equalTo(postKey).addListenerForSingleValueEvent(new com.firebase.client.ValueEventListener() {
-                @Override
-                public void onDataChange(com.firebase.client.DataSnapshot dataSnapshot) {
-
-                    boolean likeExist = false;
-                    Like currentUserLike = new Like();
-                    for (com.firebase.client.DataSnapshot oneSnapshot: dataSnapshot.getChildren()) {
-                        Like lk = oneSnapshot.getValue(Like.class);
-                        lk.setId(oneSnapshot.getKey());
-                        FirebaseAuth mAuth = FirebaseAuth.getInstance();
-                        if(lk.getOwnerId().equals(mAuth.getCurrentUser().getUid().toString())){
-                            likeExist = true;
-                            currentUserLike = lk;
-                        }
-                    }
-                    if(likeExist){
-                        btnLike.setImageResource(R.drawable.like_24x24);
-                    }else{
-                        btnLike.setImageResource(R.drawable.like_empty_24x24);
-                    }
-
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-
-                }
-            });
-            //END GET LIKES
-        }
-
-    }
 
     @Override
     protected void onStart() {
         super.onStart();
-
-        FirebaseRecyclerAdapter<Post, MyPostsActivity.PoViewHolder> firebaseRecyclerAdapter = new FirebaseRecyclerAdapter<Post, MyPostsActivity.PoViewHolder>(
+        FirebaseRecyclerAdapter<Post, FeedActivity.PoViewHolder> firebaseRecyclerAdapter = new FirebaseRecyclerAdapter<Post, FeedActivity.PoViewHolder>(
                 Post.class,
-                R.layout.one_my_post,
-                MyPostsActivity.PoViewHolder.class,
+                R.layout.one_post,
+                FeedActivity.PoViewHolder.class,
                 mDatabase.orderByChild("owner").equalTo(mAuth.getCurrentUser().getUid())
 
         ) {
             @Override
-            protected void populateViewHolder(MyPostsActivity.PoViewHolder viewHolder, Post model, int position) {
-                final String postKey = getRef(position).getKey();
+            protected void populateViewHolder(FeedActivity.PoViewHolder viewHolder, Post model, int position) {
+                String postKey = getRef(position).getKey();
                 model.setId(postKey);
                 final Post p = model;
-                final MyPostsActivity.PoViewHolder holder = viewHolder;
+                final FeedActivity.PoViewHolder holder = viewHolder;
                 viewHolder.setDescription(model.getDescription());
                 viewHolder.setMedia(getApplicationContext(), model.getMedia(), model.getMediaType(), model);
                 viewHolder.setOwner(getApplicationContext(), model.getOwner());
@@ -261,7 +133,7 @@ public class MyPostsActivity extends AppCompatActivity {
                         loadAddCommentDialog(p);
                     }
                 });
-                viewHolder.postImage.setOnClickListener(new View.OnClickListener() {
+                /*viewHolder.postImage.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         if(p.getMediaType().equals("IMAGE")){
@@ -271,17 +143,27 @@ public class MyPostsActivity extends AppCompatActivity {
                         }
 
                     }
+                });*/
+                viewHolder.postImageRipple.setOnRippleCompleteListener(new RippleView.OnRippleCompleteListener() {
+                    @Override
+                    public void onComplete(RippleView rippleView) {
+                        if(p.getMediaType().equals("IMAGE")){
+                            loadDialogViewPostOneImage(p);
+                        }else if(p.getMediaType().equals("VIDEO")){
+                            loadDialogViewPostVideo(p);
+                        }
+                    }
                 });
-                viewHolder.postAlbumPlus.setOnClickListener(new View.OnClickListener() {
+                viewHolder.btnPlusImgs.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         loadDialogViewPostAlbum(p);
                     }
                 });
-                viewHolder.postRemove.setOnClickListener(new View.OnClickListener() {
+                viewHolder.postViewOptions.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        alertDialogRemovePost(postKey);
+                        loadPostOptions(p);
                     }
                 });
 
@@ -289,6 +171,7 @@ public class MyPostsActivity extends AppCompatActivity {
         };
 
         recyclerView.setAdapter(firebaseRecyclerAdapter);
+
     }
 
     @Override
@@ -519,35 +402,319 @@ public class MyPostsActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    void alertDialogRemovePost(final String postKey){
-        AlertDialog.Builder builder = new AlertDialog.Builder(MyPostsActivity.this);
-        builder.setTitle("Are you sure you want to delete this post !?");
-        builder.setMessage("Choose carefully.");
-
-        String positiveText = getString(android.R.string.ok);
-        builder.setPositiveButton(positiveText,
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        // positive button logic
-                        FirebaseDatabase.getInstance().getReference().child("posts").child(postKey).removeValue();
-                        dialog.dismiss();
+    void loadPostOptions(final Post p){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        if(p.getOwner().equals(mAuth.getCurrentUser().getUid())){
+            builder.setItems(R.array.post_options_owner, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    // The 'which' argument contains the index position
+                    // of the selected item
+                    switch (which){
+                        case 0:
+                            loadDialogViewPostMap(p);
+                            break;
+                        case 1:
+                            loadDialogUpdatePost(p);
+                            break;
+                        case 2:
+                            deletePostDialog(p);
+                            break;
                     }
-                });
-
-        String negativeText = getString(android.R.string.cancel);
-        builder.setNegativeButton(negativeText,
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        // negative button logic
-                        dialog.dismiss();
+                }
+            });
+        }else{
+            builder.setItems(R.array.post_options, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    // The 'which' argument contains the index position
+                    // of the selected item
+                    switch (which){
+                        case 0:
+                            loadDialogViewPostMap(p);
+                            break;
                     }
-                });
+                }
+            });
+        }
+        builder.create().show();
+    }
 
-        AlertDialog dialog = builder.create();
+    void loadDialogViewPostMap(final Post p){
+        if(p.getLatLocation() == 0 && p.getLongLocation() == 0){
+            //Toast.makeText(context, "Location not specified", Toast.LENGTH_SHORT).show();
+            MyDynamicToast.informationMessage(MyPostsActivity.this, "Location not specifiedf");
+        }else{
+            Dialog dialog = new Dialog(context,android.R.style.Theme_Material_Light_NoActionBar_Fullscreen);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            dialog.setContentView(R.layout.dialog_view_post_map);
+            dialog.show();
+
+            // set the custom dialog components - text, image and button
+            GoogleMap gMap;
+
+
+            MapView mMapView = (MapView) dialog.findViewById(R.id.map_feed);
+            MapsInitializer.initialize(context);
+
+            mMapView = (MapView) dialog.findViewById(R.id.map_feed);
+            mMapView.onCreate(dialog.onSaveInstanceState());
+            mMapView.onResume();// needed to get the map to display immediately
+            mMapView.getMapAsync(new OnMapReadyCallback() {
+                @Override
+                public void onMapReady(GoogleMap googleMap) {
+                    LatLng location = new LatLng(p.getLatLocation(),p.getLongLocation());
+                    googleMap.addMarker(new MarkerOptions().position(location).title(p.getDescription()));
+                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location,18.0f));
+                }
+            });
+        }
+    }
+
+    void loadDialogUpdatePost(final Post p){
+
+        final Dialog dialog = new Dialog(context);
+        dialog.setContentView(R.layout.dialog_update_post);
         dialog.setCanceledOnTouchOutside(false);
-        // display dialog
+
+        // set the custom dialog components - text, image and button
+        Button btnCancel = (Button) dialog.findViewById(R.id.btn_cancel_update_post);
+        Button btnConfirm = (Button) dialog.findViewById(R.id.btn_confirm_update_post);
+        final EditText postText = (EditText) dialog.findViewById(R.id.edit_text_update_post);
+
+        postText.setText(p.getDescription().toString());
+
+        btnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+        btnConfirm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDatabase.child(p.getId()).child("description").setValue(postText.getText().toString());
+                dialog.dismiss();
+                MyDynamicToast.successMessage(MyPostsActivity.this, "Post updated");
+            }
+        });
+
         dialog.show();
     }
+
+    void deletePostDialog(final Post p){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setMessage("Are you sure you want to delete this post ?")
+                .setTitle("Delete");
+        builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked OK button
+                //Toast.makeText(context, "Deleting ...", Toast.LENGTH_SHORT).show();
+                if(p.getMediaType().equals("NOFILE")){
+                    FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
+                    //Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                    MyDynamicToast.successMessage(MyPostsActivity.this, "Post Deleted");
+                }else if(p.getMediaType().equals("IMAGE")){
+                    Firebase MediaRef = new Firebase("https://aftha7-2a05e.firebaseio.com/postImages");
+                    MediaRef.orderByChild("postId").equalTo(p.getId()).addChildEventListener(new ChildEventListener() {
+                        @Override
+                        public void onChildAdded(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+                            final Media m = dataSnapshot.getValue(Media.class);
+                            Log.e("POSTIDD//",p.getId());
+                            Log.e("IMGIDD//", m.getDownloadURL());
+                            StorageReference mStorage = FirebaseStorage.getInstance().getReference();
+                            StorageReference desertRef = mStorage.child("postPhotos/"+m.getDownloadURL().toString());
+                            desertRef.delete().addOnSuccessListener(new OnSuccessListener() {
+                                @Override
+                                public void onSuccess(Object o) {
+                                    FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
+                                    FirebaseDatabase.getInstance().getReference().child("postImages").child(m.getDownloadURL()).removeValue();
+                                    //Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                                    MyDynamicToast.successMessage(MyPostsActivity.this, "Post Deleted");
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception exception) {
+                                    // Uh-oh, an error occurred!
+                                    //Toast.makeText(context, "error on delete", Toast.LENGTH_SHORT).show();
+                                    MyDynamicToast.errorMessage(MyPostsActivity.this, "Something went wrong !!");
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onChildChanged(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+
+                        }
+
+                        @Override
+                        public void onChildRemoved(com.firebase.client.DataSnapshot dataSnapshot) {
+
+                        }
+
+                        @Override
+                        public void onChildMoved(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+
+                        }
+
+                        @Override
+                        public void onCancelled(FirebaseError firebaseError) {
+
+                        }
+                    });
+                    /*DatabaseReference dR = FirebaseDatabase.getInstance().getReference().child("postImages");
+                    dR.orderByChild("postId").equalTo(p.getId()).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            Media m = dataSnapshot.getValue(Media.class);
+                            Log.e("POSTIDD//",p.getId());
+                            Log.e("IMGIDD//", m.getDownloadURL());
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });*/
+                }else if(p.getMediaType().equals("VIDEO")){
+                    Firebase MediaRef = new Firebase("https://aftha7-2a05e.firebaseio.com/postVideos");
+                    MediaRef.orderByChild("postId").equalTo(p.getId()).addChildEventListener(new ChildEventListener() {
+                        @Override
+                        public void onChildAdded(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+                            final Media m = dataSnapshot.getValue(Media.class);
+                            Log.e("POSTIDD//",p.getId());
+                            Log.e("IMGIDD//", m.getDownloadURL());
+                            StorageReference mStorage = FirebaseStorage.getInstance().getReference();
+                            StorageReference desertRef = mStorage.child("postVideos/"+m.getDownloadURL().toString());
+                            desertRef.delete().addOnSuccessListener(new OnSuccessListener() {
+                                @Override
+                                public void onSuccess(Object o) {
+                                    FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
+                                    FirebaseDatabase.getInstance().getReference().child("postVideos").child(m.getDownloadURL()).removeValue();
+                                    //Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                                    MyDynamicToast.successMessage(MyPostsActivity.this, "Post Deleted");
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception exception) {
+                                    // Uh-oh, an error occurred!
+                                    //Toast.makeText(context, "error on delete", Toast.LENGTH_SHORT).show();
+                                    MyDynamicToast.errorMessage(MyPostsActivity.this, "Something went wrong !!");
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onChildChanged(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+
+                        }
+
+                        @Override
+                        public void onChildRemoved(com.firebase.client.DataSnapshot dataSnapshot) {
+
+                        }
+
+                        @Override
+                        public void onChildMoved(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+
+                        }
+
+                        @Override
+                        public void onCancelled(FirebaseError firebaseError) {
+
+                        }
+                    });
+                    /*DatabaseReference dR = FirebaseDatabase.getInstance().getReference().child("postImages");
+                    dR.orderByChild("postId").equalTo(p.getId()).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            Media m = dataSnapshot.getValue(Media.class);
+                            Log.e("POSTIDD//",p.getId());
+                            Log.e("IMGIDD//", m.getDownloadURL());
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });*/
+                }else if(p.getMediaType().equals("ALBUM")){
+                    Firebase MediaRef = new Firebase("https://aftha7-2a05e.firebaseio.com/postImages");
+                    MediaRef.orderByChild("postId").equalTo(p.getId()).addChildEventListener(new ChildEventListener() {
+                        @Override
+                        public void onChildAdded(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+                            final Media m = dataSnapshot.getValue(Media.class);
+                            Log.e("POSTIDD//",p.getId());
+                            Log.e("IMGIDD//", m.getDownloadURL());
+                            StorageReference mStorage = FirebaseStorage.getInstance().getReference();
+                            StorageReference desertRef = mStorage.child("postPhotos/"+m.getDownloadURL().toString());
+                            desertRef.delete().addOnSuccessListener(new OnSuccessListener() {
+                                @Override
+                                public void onSuccess(Object o) {
+                                    FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
+                                    FirebaseDatabase.getInstance().getReference().child("postImages").child(m.getDownloadURL()).removeValue();
+                                    //Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                                    MyDynamicToast.successMessage(MyPostsActivity.this, "Post Deleted");
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception exception) {
+                                    // Uh-oh, an error occurred!
+                                    //Toast.makeText(context, "error on delete", Toast.LENGTH_SHORT).show();
+                                    MyDynamicToast.errorMessage(MyPostsActivity.this, "Something went wrong !!");
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onChildChanged(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+
+                        }
+
+                        @Override
+                        public void onChildRemoved(com.firebase.client.DataSnapshot dataSnapshot) {
+
+                        }
+
+                        @Override
+                        public void onChildMoved(com.firebase.client.DataSnapshot dataSnapshot, String s) {
+
+                        }
+
+                        @Override
+                        public void onCancelled(FirebaseError firebaseError) {
+
+                        }
+                    });
+                }
+                else{
+                    FirebaseDatabase.getInstance().getReference().child("posts").child(p.getId()).removeValue();
+                    //Toast.makeText(context, "Post deleted", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                    MyDynamicToast.successMessage(MyPostsActivity.this, "Post Deleted");
+                }
+
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User cancelled the dialog
+                dialog.dismiss();
+            }
+        });
+
+        final AlertDialog dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.setOnShowListener( new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface arg0) {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.RED);
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.BLACK);
+            }
+        });
+        dialog.show();
+    }
+
+
+
 }

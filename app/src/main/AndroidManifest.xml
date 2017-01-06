@@ -80,7 +80,24 @@
         <activity
             android:name=".AddPostLocationActivity"
             android:label="@string/title_activity_add_post_location" />
-        <activity android:name=".ProfileActivity"></activity>
+        <activity android:name=".ProfileActivity" />
+        <activity android:name=".AccountActivity" />
+        <activity
+            android:name=".ChatActivity"
+            android:label="@string/title_activity_chat"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".DisplayMsgActivity"
+            android:label="@string/title_activity_display_msg"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".NewMsgActivity"
+            android:label="@string/title_activity_new_msg"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".NewMessageActivity"
+            android:label="@string/title_activity_new_message"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

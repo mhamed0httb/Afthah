@@ -10,14 +10,12 @@
             android:id="@+id/nav_my_posts"
             android:icon="@drawable/ic_menu_camera"
             android:title="My Posts" />
+
+
         <item
-            android:id="@+id/nav_notifications"
-            android:icon="@android:drawable/ic_popup_reminder"
-            android:title="Notifications" />
-        <item
-            android:id="@+id/nav_profile"
-            android:icon="@drawable/emo2_48x48"
-            android:title="My Profile" />
+            android:id="@+id/nav_chat"
+            android:icon="@android:drawable/sym_action_chat"
+            android:title="Inbox" />
         <!--<item
             android:id="@+id/nav_slideshow"
             android:icon="@drawable/ic_menu_slideshow"
@@ -30,9 +28,10 @@
 
     <item android:title="Communicate">
         <menu>
+
             <item
                 android:id="@+id/nav_logout"
-                android:icon="@drawable/ic_menu_share"
+                android:icon="@drawable/cast_ic_notification_disconnect"
                 android:title="Log out" />
 
         </menu>

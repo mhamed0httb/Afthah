@@ -10,11 +10,13 @@
     tools:showIn="@layout/app_bar_feed"
     android:background="@drawable/bg_tint_black">
 
+
+
     <android.support.v7.widget.RecyclerView
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/recycler_view_posts"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="20dp"/>
+        android:padding="16dp"/>
 
 </RelativeLayout>

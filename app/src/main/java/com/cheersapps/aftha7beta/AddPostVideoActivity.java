@@ -1,6 +1,7 @@
 package com.cheersapps.aftha7beta;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -17,6 +18,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -27,12 +29,22 @@ import android.widget.VideoView;
 import com.afollestad.materialcamera.MaterialCamera;
 import com.cheersapps.aftha7beta.entity.Media;
 import com.cheersapps.aftha7beta.entity.Post;
+import com.cheersapps.aftha7beta.entity.PostCamera;
+import com.cheersapps.aftha7beta.thread.AddPostCameraThread;
+import com.cheersapps.aftha7beta.thread.AddPostVideoThread;
 import com.desai.vatsal.mydynamictoast.MyDynamicToast;
 import com.firebase.client.Firebase;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.MapsInitializer;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -72,6 +84,7 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
     private Location mLastLocation;
     private GoogleApiClient mGoogleApiClient;
     boolean myLocationCheck = false;
+    MarkerOptions marker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +95,7 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
         Firebase.setAndroidContext(context);
         mStorage = FirebaseStorage.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
+        marker = new MarkerOptions();
 
         addPostInputTextVideo = (EditText) findViewById(R.id.add_post_input_text_video);
         btnAddPostVideo = (Button) findViewById(R.id.btn_add_post_video);
@@ -94,13 +108,6 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
         btnReturn = (ImageButton)findViewById(R.id.btn_back_from_add_post_video);
         btnAddPostLocation = (ImageButton) findViewById(R.id.btn_add_post_video_location);
         btnAllowLocation = (ImageButton) findViewById(R.id.btn_allow_my_location_video);
-
-        latLocation = getIntent().getDoubleExtra("lat",0);
-        longLoction = getIntent().getDoubleExtra("long",0);
-
-        if(latLocation != 0 && longLoction != 0 ){
-            MyDynamicToast.informationMessage(AddPostVideoActivity.this, "Location successfully set");
-        }
 
         btnPlayvideo.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -155,14 +162,12 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
             }
         });
 
-        /*btnAddPostLocation.setOnClickListener(new View.OnClickListener() {
+        btnAddPostLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent in = new Intent(AddPostVideoActivity.this,AddPostLocationActivity.class);
-                in.putExtra("from",4);
-                startActivity(in);
+                loadDialogSetPostLocation();
             }
-        });*/
+        });
 
         btnAllowLocation.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -207,7 +212,11 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
                         }else if(vidUri == null){
                             MyDynamicToast.warningMessage(AddPostVideoActivity.this, "Please add a Video !!");
                         }else{
-                            uploadVideo(vidUri);
+                            PostCamera pc = new PostCamera(vidUri,addPostInputTextVideo.getText().toString(),latLocation,longLoction);
+                            AddPostVideoThread th = new AddPostVideoThread(context);
+                            th.execute(pc);
+                            startActivity(new Intent(AddPostVideoActivity.this,FeedActivity.class));
+                            //uploadVideo(vidUri);
                         }
 
                     }
@@ -535,4 +544,61 @@ public class AddPostVideoActivity extends AppCompatActivity implements GoogleApi
         checkPlayServices();
     }
 
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(AddPostVideoActivity.this,FeedActivity.class));
+    }
+
+    void loadDialogSetPostLocation(){
+        final Dialog dialog = new Dialog(context,android.R.style.Theme_Material_Light_NoActionBar_Fullscreen);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_set_post_location);
+
+
+        // set the custom dialog components - text, image and button
+        final Button btnAddLocation = (Button) dialog.findViewById(R.id.btn_set_post_location_map);
+        btnAddLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MyDynamicToast.warningMessage(AddPostVideoActivity.this, "Choose a location");
+            }
+        });
+        MapView mMapView;
+        MapsInitializer.initialize(context);
+
+        mMapView = (MapView) dialog.findViewById(R.id.map_set_post_location);
+        mMapView.onCreate(dialog.onSaveInstanceState());
+        mMapView.onResume();// needed to get the map to display immediately
+        mMapView.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(final GoogleMap googleMap) {
+                LatLng kairouan = new LatLng(35.6487699,10.0932645);
+                marker.position(kairouan).title("Marker in Kairouan");
+                googleMap.addMarker(marker);
+                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(kairouan,10.0f));
+
+                googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+                    @Override
+                    public void onMapClick(final LatLng latLng) {
+                        googleMap.clear();
+                        marker.position(latLng).title("here");
+                        googleMap.addMarker(marker);
+                        //mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+
+                        btnAddLocation.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                latLocation = latLng.latitude;
+                                longLoction = latLng.longitude;
+                                MyDynamicToast.informationMessage(AddPostVideoActivity.this, "Location successfully set");
+                                dialog.dismiss();
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        dialog.show();
+    }
 }

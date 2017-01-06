@@ -1,6 +1,7 @@
 package com.cheersapps.aftha7beta;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -16,6 +17,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -26,12 +28,21 @@ import android.widget.VideoView;
 import com.afollestad.materialcamera.MaterialCamera;
 import com.cheersapps.aftha7beta.entity.Media;
 import com.cheersapps.aftha7beta.entity.Post;
+import com.cheersapps.aftha7beta.entity.PostCamera;
+import com.cheersapps.aftha7beta.thread.AddPostCameraThread;
 import com.desai.vatsal.mydynamictoast.MyDynamicToast;
 import com.firebase.client.Firebase;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.MapsInitializer;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -59,6 +70,7 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
     Context context;
 
     double latLocation,longLoction = 0;
+    MarkerOptions marker;
 
     ImageButton btnReturn;
     ImageButton btnAddPostLocation,btnAllowLocation;
@@ -68,6 +80,7 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
     private Location mLastLocation;
     private GoogleApiClient mGoogleApiClient;
     boolean myLocationCheck = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +92,7 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
         Firebase.setAndroidContext(context);
         mStorage = FirebaseStorage.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
+        marker = new MarkerOptions();
 
         displayImageCamera = (ImageView) findViewById(R.id.display_image_take_post_camera);
         addPostInputTextCamera = (EditText) findViewById(R.id.add_post_input_text_camera);
@@ -89,12 +103,7 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
         btnAddPostLocation = (ImageButton) findViewById(R.id.btn_add_post_camera_location);
         btnAllowLocation = (ImageButton) findViewById(R.id.btn_allow_my_location_camera);
 
-        latLocation = getIntent().getDoubleExtra("lat",0);
-        longLoction = getIntent().getDoubleExtra("long",0);
 
-        if(latLocation != 0 && longLoction != 0 ){
-            MyDynamicToast.informationMessage(AddPostCameraActivity.this, "Location successfully set");
-        }
 
         btnChangePhoto.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -113,9 +122,7 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
         btnAddPostLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent in = new Intent(AddPostCameraActivity.this,AddPostLocationActivity.class);
-                in.putExtra("from",2);
-                startActivity(in);
+                loadDialogSetPostLocation();
             }
         });
 
@@ -170,7 +177,11 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
                         }else if(imUri == null){
                             MyDynamicToast.warningMessage(AddPostCameraActivity.this, "Please add an Image !!");
                         }else{
-                            uploadImage(imUri);
+                            PostCamera pc = new PostCamera(imUri,addPostInputTextCamera.getText().toString(),latLocation,longLoction);
+                            AddPostCameraThread th = new AddPostCameraThread(context);
+                            th.execute(pc);
+                            startActivity(new Intent(AddPostCameraActivity.this,FeedActivity.class));
+                            //uploadImage(imUri);
                         }
                     }
                 });
@@ -215,6 +226,7 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
                         //END ADD POST HERE
                         MyDynamicToast.successMessage(AddPostCameraActivity.this, "Post Added Successfully :)");
                         startActivity(new Intent(AddPostCameraActivity.this,FeedActivity.class));
+                        finish();
                     }
                 });
             }
@@ -408,5 +420,58 @@ public class AddPostCameraActivity extends AppCompatActivity implements GoogleAp
     protected void onResume() {
         super.onResume();
         checkPlayServices();
+    }
+
+    void loadDialogSetPostLocation(){
+        final Dialog dialog = new Dialog(context,android.R.style.Theme_Material_Light_NoActionBar_Fullscreen);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_set_post_location);
+
+
+        // set the custom dialog components - text, image and button
+        final Button btnAddLocation = (Button) dialog.findViewById(R.id.btn_set_post_location_map);
+        btnAddLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MyDynamicToast.warningMessage(AddPostCameraActivity.this, "Choose a location");
+            }
+        });
+        MapView mMapView;
+        MapsInitializer.initialize(context);
+
+        mMapView = (MapView) dialog.findViewById(R.id.map_set_post_location);
+        mMapView.onCreate(dialog.onSaveInstanceState());
+        mMapView.onResume();// needed to get the map to display immediately
+        mMapView.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(final GoogleMap googleMap) {
+                LatLng kairouan = new LatLng(35.6487699,10.0932645);
+                marker.position(kairouan).title("Marker in Kairouan");
+                googleMap.addMarker(marker);
+                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(kairouan,10.0f));
+
+                googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+                    @Override
+                    public void onMapClick(final LatLng latLng) {
+                        googleMap.clear();
+                        marker.position(latLng).title("here");
+                        googleMap.addMarker(marker);
+                        //mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+
+                        btnAddLocation.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                latLocation = latLng.latitude;
+                                longLoction = latLng.longitude;
+                                MyDynamicToast.informationMessage(AddPostCameraActivity.this, "Location successfully set");
+                                dialog.dismiss();
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        dialog.show();
     }
 }

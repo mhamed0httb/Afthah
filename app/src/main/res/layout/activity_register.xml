@@ -8,8 +8,18 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:background="@drawable/bg"
-    tools:context="com.cheersapps.aftha7.RegisterActivity">
+    android:background="@drawable/bg_tint_black"
+    tools:context="com.cheersapps.aftha7beta.RegisterActivity">
+
+    <ImageView
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:background="@android:color/transparent"
+        android:id="@+id/pic"
+        android:layout_alignParentTop="true"
+        android:shape="ring"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"/>
 
 
     <EditText
@@ -22,11 +32,10 @@
         android:textSize="16sp"
         android:textColor="@color/colorWhite"
         android:textColorHint="@color/colorWhite"
-
         android:drawableLeft="@mipmap/mm"
-
-        android:layout_marginTop="220dp"
-        android:layout_centerHorizontal="true" />
+        android:layout_marginTop="20dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/pic"/>
 
 
     <EditText
@@ -40,25 +49,12 @@
         android:textColor="@color/colorWhite"
         android:textColorHint="@color/colorWhite"
         android:textSize="16sp"
-
-
-        android:drawableLeft="@android:drawable/ic_dialog_map"
-
+        android:drawableLeft="@mipmap/mail"
         android:layout_below="@+id/et_register"
         android:layout_marginLeft="50dp"
-        android:layout_marginTop="38dp" />
+        android:layout_marginTop="20dp"
+        android:layout_centerHorizontal="true"/>
 
-
-    <ImageButton
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:background="@android:drawable/ic_dialog_map"
-        android:layout_marginLeft="130dp"
-        android:layout_marginTop="132dp"
-        android:id="@+id/pic"
-
-
-        />
 
     <EditText
         android:id="@+id/et_password"
@@ -67,32 +63,27 @@
         android:hint="          Password"
         android:textColor="@color/colorWhite"
         android:textColorHint="@color/colorWhite"
-
         android:textSize="16sp"
         android:drawablePadding="10dp"
-
         android:drawableLeft="@mipmap/locked"
         android:fontFamily="Roboto"
         android:inputType="textPassword"
-
-
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="20dp"
         android:layout_below="@+id/et_mail"
-        android:layout_alignLeft="@+id/et_mail"
-        android:layout_alignStart="@+id/et_mail" />
+        android:layout_centerHorizontal="true"/>
 
     <Button
         android:id="@+id/btn_register"
         android:layout_width="250dp"
         android:layout_marginTop="20dp"
         android:layout_height="35dp"
-        android:background="@drawable/roundbutton"
-        android:textColor="#fff"
 
+        android:textColor="#fff"
         android:text="Sign Up"
         android:layout_below="@+id/et_password"
-        android:layout_alignLeft="@+id/et_password"
-        android:layout_alignStart="@+id/et_password" />
+        android:layout_centerHorizontal="true"/>
+
+
 
 
 </RelativeLayout>

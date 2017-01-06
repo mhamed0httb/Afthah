@@ -2,6 +2,7 @@ package com.cheersapps.aftha7beta;
 
 import android.*;
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -9,6 +10,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -20,6 +22,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -34,6 +37,13 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.MapsInitializer;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.text.DateFormat;
@@ -49,6 +59,7 @@ public class AddPostTextActivity extends AppCompatActivity implements GoogleApiC
     EditText inputNewPostText;
     ImageButton btnReturn;
 
+
     private Firebase mRef;
     FirebaseAuth mAuth;
     Context context;
@@ -59,6 +70,7 @@ public class AddPostTextActivity extends AppCompatActivity implements GoogleApiC
     private Location mLastLocation;
     private GoogleApiClient mGoogleApiClient;
     boolean myLocationCheck = false;
+    MarkerOptions marker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,20 +79,7 @@ public class AddPostTextActivity extends AppCompatActivity implements GoogleApiC
         context = this;
         Firebase.setAndroidContext(context);
         mAuth = FirebaseAuth.getInstance();
-
-        //Toolbar
-        /*Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_return);
-        setSupportActionBar(toolbar);
-        toolbar.setNavigationIcon(R.drawable.back_arrow_32x32);
-        toolbar.setTitle("Add Post");
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });*/
-        //End Toolbar
-
+        marker = new MarkerOptions();
 
         btnAddPostText = (Button) findViewById(R.id.btn_add_post_for_input_text);
         btnAddPostLocation = (ImageButton) findViewById(R.id.btn_add_post_text_location);
@@ -89,12 +88,6 @@ public class AddPostTextActivity extends AppCompatActivity implements GoogleApiC
         btnAllowLocation = (ImageButton) findViewById(R.id.btn_allow_my_location);
         mRef = new Firebase("https://aftha7-2a05e.firebaseio.com/posts");
 
-        latLocation = getIntent().getDoubleExtra("lat",0);
-        longLoction = getIntent().getDoubleExtra("long",0);
-
-        if(latLocation != 0 && longLoction != 0 ){
-            MyDynamicToast.informationMessage(AddPostTextActivity.this, "Location successfully set");
-        }
 
 
         btnAddPostText.setOnClickListener(new View.OnClickListener() {
@@ -114,9 +107,7 @@ public class AddPostTextActivity extends AppCompatActivity implements GoogleApiC
         btnAddPostLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent in = new Intent(AddPostTextActivity.this,AddPostLocationActivity.class);
-                in.putExtra("from",1);
-                startActivity(in);
+                loadDialogSetPostLocation();
             }
         });
 
@@ -141,6 +132,8 @@ public class AddPostTextActivity extends AppCompatActivity implements GoogleApiC
                 }
             }
         });
+
+
     }
 
 
@@ -211,6 +204,7 @@ public class AddPostTextActivity extends AppCompatActivity implements GoogleApiC
                     MyDynamicToast.successMessage(AddPostTextActivity.this, "Post Added Successfully :)");
                     Intent in = new Intent(AddPostTextActivity.this, FeedActivity.class);
                     startActivity(in);
+                    finish();
                     //END EVERYTHING ELSE HERE
                 }
 
@@ -345,5 +339,63 @@ public class AddPostTextActivity extends AppCompatActivity implements GoogleApiC
     protected void onResume() {
         super.onResume();
         checkPlayServices();
+    }
+
+    void loadDialogSetPostLocation(){
+        final Dialog dialog = new Dialog(context,android.R.style.Theme_Material_Light_NoActionBar_Fullscreen);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_set_post_location);
+
+
+        // set the custom dialog components - text, image and button
+        final Button btnAddLocation = (Button) dialog.findViewById(R.id.btn_set_post_location_map);
+        btnAddLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MyDynamicToast.warningMessage(AddPostTextActivity.this, "Choose a location");
+            }
+        });
+        MapView mMapView;
+        MapsInitializer.initialize(context);
+
+        mMapView = (MapView) dialog.findViewById(R.id.map_set_post_location);
+        mMapView.onCreate(dialog.onSaveInstanceState());
+        mMapView.onResume();// needed to get the map to display immediately
+        mMapView.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(final GoogleMap googleMap) {
+                LatLng kairouan = new LatLng(35.6487699,10.0932645);
+                marker.position(kairouan).title("Marker in Kairouan");
+                googleMap.addMarker(marker);
+                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(kairouan,10.0f));
+
+                googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+                    @Override
+                    public void onMapClick(final LatLng latLng) {
+                        googleMap.clear();
+                        marker.position(latLng).title("here");
+                        googleMap.addMarker(marker);
+                        //mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+
+                        btnAddLocation.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                latLocation = latLng.latitude;
+                                longLoction = latLng.longitude;
+                                MyDynamicToast.informationMessage(AddPostTextActivity.this, "Location successfully set");
+                                dialog.dismiss();
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        dialog.show();
+    }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(AddPostTextActivity.this,FeedActivity.class));
     }
 }

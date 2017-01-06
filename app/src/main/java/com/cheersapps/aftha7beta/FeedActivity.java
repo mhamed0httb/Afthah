@@ -1,5 +1,6 @@
 package com.cheersapps.aftha7beta;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -17,6 +18,7 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -53,6 +55,9 @@ import com.firebase.client.ChildEventListener;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.gitonway.lee.niftynotification.lib.Configuration;
+import com.gitonway.lee.niftynotification.lib.Effects;
+import com.gitonway.lee.niftynotification.lib.NiftyNotificationView;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -119,6 +124,8 @@ public class FeedActivity extends AppCompatActivity
         context = this;
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference().child("posts");
+
+
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         View header=navigationView.getHeaderView(0);
@@ -230,73 +237,13 @@ public class FeedActivity extends AppCompatActivity
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view_posts);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         //recyclerView.setLayoutManager(new GridLayoutManager(this,2));
-        //final PostAdapter postsAdapter = new PostAdapter(listPosts);
-        //recyclerView.setAdapter(postsAdapter);
-
-        //LOADING DATA
-        /*mRef = new Firebase("https://aftha7-2a05e.firebaseio.com/posts");
-        mRef.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                final Post pi = dataSnapshot.getValue(Post.class);
-                pi.setId( dataSnapshot.getKey().toString());
-
-                listPosts.add(pi);
-                Log.e("the Post :// ", pi.toString());
-                Log.e("the Owner name :// ", pi.getOwner().toString());
-                //PostCustomAdapter adap = new PostCustomAdapter(context,R.layout.one_post,listPosts);
-
-                postsAdapter.notifyDataSetChanged();
-                //progressDialogLoadData.dismiss();
-
-
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                Post pi = dataSnapshot.getValue(Post.class);
-                String postId = dataSnapshot.getKey().toString();
-                pi.setId(postId);
-                for (int i=0; i<listPosts.size(); i++) {
-                    if(listPosts.get(i).getId().equals(postId)){
-                        listPosts.set(i,pi);
-                        //listViewPosts.setSelection(i);
-                    }
-                }
-                postsAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-                Post pi = dataSnapshot.getValue(Post.class);
-                String postId = dataSnapshot.getKey().toString();
-                pi.setId(postId);
-                for (int i=0; i<listPosts.size(); i++) {
-                    if(listPosts.get(i).getId().equals(postId)){
-                        listPosts.remove(i);
-                        postsAdapter.notifyDataSetChanged();
-                        //listViewPosts.setSelection(i);
-                    }
-                }
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });*/
-        //End LOADING DATA
 
 
         currentUserImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(FeedActivity.this, ProfileActivity.class));
+                startActivity(new Intent(FeedActivity.this, AccountActivity.class));
+                finish();
             }
         });
 
@@ -501,12 +448,11 @@ public class FeedActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
-
+        progressDialogLoadData = new ProgressDialog(context);
+        progressDialogLoadData.setMessage(" Loading Data");
+        progressDialogLoadData.setCanceledOnTouchOutside(false);
         if(isNetworkAvailable()){
             //Toast.makeText(context, "yess internet", Toast.LENGTH_LONG).show();
-            progressDialogLoadData = new ProgressDialog(context);
-            progressDialogLoadData.setMessage(" Loading Data");
-            progressDialogLoadData.setCanceledOnTouchOutside(false);
             progressDialogLoadData.show();
         }else{
             //Toast.makeText(context, "nooo internet", Toast.LENGTH_LONG).show();
@@ -582,7 +528,7 @@ public class FeedActivity extends AppCompatActivity
         };
 
         recyclerView.setAdapter(firebaseRecyclerAdapter);
-
+        //progressDialogLoadData.dismiss();
     }
 
     @Override
@@ -641,6 +587,12 @@ public class FeedActivity extends AppCompatActivity
             // Handle the my posts action
             startActivity(new Intent(FeedActivity.this,MyPostsActivity.class));
         }
+
+
+        else if (id == R.id.nav_chat) {
+            Intent in = new Intent(FeedActivity.this,ChatActivity.class);
+            startActivity(in);
+        }
         //else if (id == R.id.nav_filter) {
             //final Dialog dialog = new Dialog(context,android.R.style.Theme_Material_Light_NoActionBar_Fullscreen);
             //final Dialog dialog = new Dialog(context);
@@ -664,9 +616,7 @@ public class FeedActivity extends AppCompatActivity
             //dialog.show();
 
         //}
-        else if (id == R.id.nav_notifications) {
 
-        }
         /*else if (id == R.id.nav_manage) {
 
         } */
@@ -864,7 +814,7 @@ public class FeedActivity extends AppCompatActivity
         //dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
 
         // set the custom dialog components - text, image and button
-        ImageView imgCloseDialog = (ImageView) dialog.findViewById(R.id.btn_close_dialog_view_post_image);
+        //ImageView imgCloseDialog = (ImageView) dialog.findViewById(R.id.btn_close_dialog_view_post_image);
         //final ImageView imgPost = (ImageView) dialog.findViewById(R.id.img_dialog_view_post_image);
         //final LinearLayout horizontalLayout = (LinearLayout) dialog.findViewById(R.id.linear_layout_dialog_view_post_images);
 
@@ -874,12 +824,12 @@ public class FeedActivity extends AppCompatActivity
         GridAdapter gridAdapter = new GridAdapter(context, images);
         grid.setAdapter(gridAdapter);
 
-        imgCloseDialog.setOnClickListener(new View.OnClickListener() {
+        /*imgCloseDialog.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 dialog.dismiss();
             }
-        });
+        });*/
 
         //Toast.makeText(context, listMedia.size(), Toast.LENGTH_LONG).show();
         Log.e("SIZEEEE//", String.valueOf(p.getListMediaUrl().size()));
