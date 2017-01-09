@@ -467,7 +467,7 @@ public class FeedActivity extends AppCompatActivity
 
         ) {
             @Override
-            protected void populateViewHolder(PoViewHolder viewHolder, Post model, int position) {
+            protected void populateViewHolder(final PoViewHolder viewHolder, Post model, int position) {
                 progressDialogLoadData.dismiss();
                 String postKey = getRef(position).getKey();
                 model.setId(postKey);
